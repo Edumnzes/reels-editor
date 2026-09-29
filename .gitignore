@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Mídia e arquivos de projeto (nunca versionar vídeos/áudios de clientes)
+*.mp4
+*.mov
+*.MOV
+*.wav
+*.mp3
+*.m4a
+*.jpg
+*.png
+!docs/**/*.png
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini

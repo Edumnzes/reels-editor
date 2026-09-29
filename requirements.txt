@@ -1,0 +1,7 @@
+# Instalado automaticamente por scripts/setup_env.py em ~/reelsenv
+faster-whisper
+imageio-ffmpeg
+opencv-python
+pillow
+numpy
+truststore

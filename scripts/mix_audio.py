@@ -1,0 +1,35 @@
+"""Mix Adobe Enhance Speech stems back into the video, normalized for Instagram.
+
+Usage: python mix_audio.py <video.mp4> <enhanced_speech.wav> <out.mp4> [--bg background.wav] [--bg-level 0.35] [--sfx sfx.wav]
+- Adds a little of the original ambience (background stem) so the voice doesn't sound
+  "studio-pasted" onto a noisy location shot. 0.25-0.4 works for trade shows/streets;
+  use 0 for indoor talking heads.
+- loudnorm to -14 LUFS / -1.5 dBTP (Instagram normalizes around -14).
+- --sfx: the sfx.wav written by `project.py full` (SFX timeline) is layered back on top,
+  because this script replaces the render's audio.
+- Video stream is copied (no re-encode). Prints the measured loudness of the result.
+"""
+import argparse, subprocess, os, tempfile
+import imageio_ffmpeg
+
+ap = argparse.ArgumentParser()
+ap.add_argument("video"); ap.add_argument("speech"); ap.add_argument("out")
+ap.add_argument("--bg"); ap.add_argument("--bg-level", type=float, default=0.35); ap.add_argument("--sfx")
+a = ap.parse_args()
+FF = imageio_ffmpeg.get_ffmpeg_exe()
+mix = os.path.join(tempfile.gettempdir(), "reels_mix.wav")
+ins = ["-i", a.speech]; chain = "[0:a]"; n = 1
+if a.bg and a.bg_level > 0:
+    ins += ["-i", a.bg]; pre = f"[{n}:a]volume={a.bg_level}[b];"; chain += "[b]"; n += 1
+else:
+    pre = ""
+if a.sfx:
+    ins += ["-i", a.sfx]; chain += f"[{n}:a]"; n += 1
+mixer = f"{chain}amix=inputs={n}:normalize=0," if n > 1 else "[0:a]"
+cmd = [FF, "-loglevel", "error", "-y", *ins, "-filter_complex",
+       f"{pre}{mixer}highpass=f=70,loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[a]", "-map", "[a]", "-ac", "2", mix]
+subprocess.run(cmd, check=True)
+subprocess.run([FF, "-loglevel", "error", "-y", "-i", a.video, "-i", mix, "-map", "0:v", "-map", "1:a", "-c:v", "copy",
+                "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-shortest", a.out], check=True)
+r = subprocess.run([FF, "-hide_banner", "-i", mix, "-af", "loudnorm=print_format=summary", "-f", "null", "-"], capture_output=True, text=True)
+print("\n".join(l for l in r.stderr.splitlines() if "Input Integrated" in l or "Input True Peak" in l))
