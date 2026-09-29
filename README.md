@@ -29,6 +29,7 @@ com o Adobe Podcast Enhance Speech.
 
 | Etapa | Resultado |
 |---|---|
+| Perfil da marca (1ª vez) | Briefing curto + análise dos Reels e Insights do Instagram; salvo no computador e reaproveitado |
 | Análise | Transcrição com tempo de cada palavra, mapa de pausas, detecção de rostos, resumo do vídeo |
 | Corte | Remove silêncio, respirações, "éé", falsas largadas e repetições; verifica o corte transcrevendo de novo |
 | Câmera virtual | Zooms leves só nos cortes, enquadramento fixo (tripé) ou acompanhamento suave do rosto |
@@ -84,6 +85,8 @@ Ou simplesmente peça em linguagem natural: *"edita esse vídeo para Reels, cort
 coloca legenda"*. A skill também é acionada por pedidos parciais (só legendas, só o corte, só o áudio).
 
 O Claude vai:
+0. **na primeira vez com uma marca**: fazer um briefing curto e analisar os Reels e Insights
+   do Instagram (você faz o login; a skill só lê) — isso fica salvo e não é repetido;
 1. analisar o vídeo e mostrar o mapa (tempo | plano | fala | tratamento sugerido);
 2. perguntar o que só você sabe (nome do evento, @, estilo);
 3. cortar, montar o projeto, conferir prévias e renderizar;
@@ -114,14 +117,17 @@ reels-editor/
 │   ├── cut.py                # renderiza o corte (+ cuts.json com o início de cada trecho)
 │   ├── detect_cuts.py        # confere os cortes visíveis na imagem
 │   ├── mix_audio.py          # mixa voz + ambiente + SFX e normaliza (−14 LUFS)
+│   ├── brand.py              # lê/grava o perfil da marca (~/instagram-legendas/<arroba>/)
 │   ├── reels_lib.py          # motor: câmera, legendas, cor, B-roll, SFX, QA, render
 │   └── fx.py                 # animações de texto e fundos (inspiradas no React Bits)
 ├── references/
+│   ├── onboarding.md         # briefing + análise do Instagram (1ª vez por marca)
 │   ├── style-guide.md        # números e regras: ritmo, zoom, proporção, legendas
 │   ├── visual-references.md  # direções visuais, cor, SFX, bancos de assets
 │   └── reactbits.md          # catálogo de animações
 └── assets/
     ├── example_project.py    # projeto completo de exemplo (copiar e adaptar)
+    ├── marca_template.json   # modelo do marca.json
     ├── *.ttf + OFL.txt       # fontes (SIL Open Font License)
     └── yunet.onnx            # modelo de detecção de rosto (MIT)
 ```
@@ -140,6 +146,32 @@ no Windows, `~/reelsenv/bin/python` no macOS/Linux):
 | `python project.py strip 5.2 6.2` | Quadros consecutivos para julgar suavidade |
 | `python project.py looks 12` | O mesmo quadro em todos os ajustes de cor |
 | `python project.py full render.mp4` | Render final (+ `final_sheet.jpg` para conferência) |
+
+## Perfil da marca
+
+Na primeira edição de cada marca, a skill faz um **briefing curto** (quem produz, o que vende, para
+quem, objetivo, tom, cores, CTA, o que evitar) e **analisa o Instagram**: Reels publicados, "Ver insights"
+de 8–12 Reels (visualizações, % de não seguidores, tempo médio, compartilhamentos, visitas ao perfil)
+e a visão geral da conta. Daí saem as regras de edição daquela marca.
+
+- **Login:** feito por você no navegador (de preferência o Chrome com a extensão Claude, já logado).
+  A skill **nunca digita senha** e **só lê** — não curte, não comenta, não segue, não altera nada.
+  Sem navegador, dá para mandar prints.
+- **Onde fica:** `~/instagram-legendas/<arroba>/` — a mesma pasta da skill `legendas-instagram`,
+  então as duas compartilham o que já sabem sobre a marca.
+
+| Arquivo | Conteúdo |
+|---|---|
+| `perfil.md` | Negócio, público, voz, insights (compartilhado com as legendas) |
+| `video.md` | Análise dos Reels e direção de edição recomendada |
+| `marca.json` | Padrões aplicados automaticamente: @, CTA, cores, fontes, logo, estilo de legenda, cor, termos da transcrição |
+| `videos.md` | Histórico de Reels entregues |
+
+```bash
+python ~/.claude/skills/reels-editor/scripts/brand.py list
+```
+
+Mostra as marcas que já têm perfil. Para ver ou apagar, é só abrir a pasta — são arquivos de texto.
 
 ## Efeitos sonoros
 

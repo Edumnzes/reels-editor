@@ -9,6 +9,7 @@ vídeo (`~/reels/<nome>/`), salvo indicação.
 ```
 vídeo bruto (.MOV/.MP4)
   │
+  ├─ A. Perfil da marca ─ brand.py · briefing · Instagram (leitura) → perfil.md · video.md · marca.json
   ├─ 1. Análise ──────── transcribe.py · energy.py · faces.py  →  mapa + perguntas
   ├─ 2. Corte ────────── plan_cut.py · cut.py · transcribe.py  →  base_1440.mp4 + cuts.json
   ├─ 3. Áudio ────────── conector Adobe (Enhance Speech)       →  speech.wav + background.wav
@@ -17,6 +18,31 @@ vídeo bruto (.MOV/.MP4)
   ├─ 6. QA ───────────── preview · check · cuts · motion       →  ajustes
   └─ 7. Render/entrega ─ project.py full · mix_audio.py        →  Downloads/<nome>_reels_final.mp4
 ```
+
+## A. Perfil da marca (sempre primeiro; completo só na 1ª vez)
+
+Procedimento completo em `references/onboarding.md`.
+
+1. `brand.py show <arroba>` verifica o que já existe em `~/instagram-legendas/<arroba>/`.
+2. **Já existe** → lê `perfil.md`, `video.md` e `marca.json`, resume em 2–3 linhas e pergunta só
+   se algo mudou.
+3. **Não existe** → briefing curto (até 8 perguntas em 2 rodadas, com opções pré-preenchidas pelo que
+   já se sabe) + análise do Instagram no navegador, com o login feito pela própria pessoa:
+   perfil, grade de Reels, "Ver insights" de 8–12 Reels, insights da conta e 3–5 Reels assistidos.
+   Só leitura; senha nunca é digitada; sem navegador, usa prints.
+4. Grava `video.md` (números, o que funciona, direção de edição) e `marca.json` (padrões da edição).
+
+Como o perfil entra na edição:
+
+| Campo | Onde é usado |
+|---|---|
+| `transcricao_termos` | `--prompt` do transcribe.py (grafia de marca, produtos, cidades) |
+| `edicao.caption_style`, `edicao.look` | direção visual (etapa 4) |
+| `edicao.duracao_alvo_s`, `gancho`, `evitar` | escolha das frases e abertura (etapa 2) |
+| `cores`, `fontes`, `logo`, `cta` | `project.py` via `load_brand()` (etapa 5) |
+| correções da pessoa | gravadas de volta no `marca.json` / `video.md` |
+
+Ao entregar, `brand.py log` registra o vídeo em `videos.md`.
 
 ## 0. Preparação (uma vez por computador)
 
@@ -138,7 +164,8 @@ O Claude abre e olha cada imagem gerada antes de seguir.
    (uma miniatura a cada 2 s) e `sfx.wav` se houver efeitos.
 2. `mix_audio.py render.mp4 speech.wav final.mp4 --bg background.wav --bg-level X [--sfx sfx.wav]`.
 3. Cópia para `Downloads/<nome>_reels_final.mp4`.
-4. Resposta ao usuário: onde está o arquivo e a duração; tabela tempo | o que foi adicionado;
+4. `brand.py log <arroba> "..."` registra a entrega no histórico da marca.
+5. Resposta ao usuário: onde está o arquivo e a duração; tabela tempo | o que foi adicionado;
    o que foi cortado; pontos para conferir (dados técnicos na tela, @, SFX faltando);
    o que o motor não faz e melhoraria o vídeo; oferta de ajustes.
 

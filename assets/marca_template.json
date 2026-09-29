@@ -1,0 +1,34 @@
+{
+  "handle": "",
+  "nome": "",
+  "updated": "",
+  "quem_grava": "",
+  "cta": {
+    "principal": "Chama no WhatsApp",
+    "secundario": "Siga para mais",
+    "contato": "",
+    "automacao_dm": false
+  },
+  "cores": {
+    "destaque": "#FFD400",
+    "secundaria": "#22C55E",
+    "card": "#0B1120",
+    "texto": "#FFFFFF"
+  },
+  "fontes": {
+    "titulos": "sans",
+    "acento": "serif"
+  },
+  "logo": "",
+  "edicao": {
+    "caption_style": "hormozi",
+    "look": "none",
+    "duracao_alvo_s": [20, 45],
+    "ritmo": "medio",
+    "gancho": "",
+    "evitar": []
+  },
+  "transcricao_termos": [],
+  "keywords": [],
+  "fix": {}
+}

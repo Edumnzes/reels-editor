@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.0 — em desenvolvimento (branch `v2`)
+- **Perfil da marca como primeiro passo**: briefing curto + análise somente leitura dos Reels e Insights
+  do Instagram (login feito pela pessoa), salvo em `~/instagram-legendas/<arroba>/` e reaproveitado.
+- Pasta compartilhada com a skill `legendas-instagram` (`perfil.md`), mais `video.md`, `marca.json` e `videos.md`.
+- `scripts/brand.py` (list/show/init/log e `load_brand()` para o project.py) e `assets/marca_template.json`.
+- `references/onboarding.md`: roteiro do briefing, o que ler no Instagram, regras de segurança e modelos.
+- O perfil passa a definir termos da transcrição, direção visual, cores, CTA e duração alvo.
+- Termos de uso: seção sobre acesso ao Instagram e dados do perfil.
+
 ## 1.0.0 — 2026-09-29
 Primeira versão no GitHub (uso privado).
 

@@ -35,6 +35,7 @@ O Software faz verificações, mas não garante exatidão. Revise antes de publi
 | Transcrição | Localmente (faster-whisper); o texto também é lido pelo Claude durante a sessão |
 | Quadros de conferência (miniaturas, prévias) | Lidos pelo Claude durante a sessão |
 | Trilha de voz | Enviada ao **Adobe Creative Cloud / Adobe Podcast** somente se você usar o conector Adobe |
+| Perfil da marca (briefing, análise do Instagram, métricas) | Salvo em texto no seu computador (`~/instagram-legendas/<arroba>/`); lido pelo Claude durante a sessão |
 
 - O uso do Claude está sujeito aos termos e à política de privacidade da **Anthropic**.
 - O uso do tratamento de voz está sujeito aos termos e à política de privacidade da **Adobe**;
@@ -42,6 +43,16 @@ O Software faz verificações, mas não garante exatidão. Revise antes de publi
 - Se o vídeo contiver dados pessoais de terceiros (rosto, voz, nome), você é o controlador
   desses dados nos termos da Lei nº 13.709/2018 (LGPD) e deve ter base legal para tratá-los.
 - O Software não coleta telemetria nem envia dados ao titular.
+
+### Acesso ao Instagram
+- O login é feito **por você**, no seu navegador. O Software instrui o Claude a **nunca digitar senhas,
+  códigos ou credenciais** e a apenas **ler** o perfil, os Reels e os Insights — sem curtir, comentar,
+  seguir, enviar mensagens ou alterar configurações.
+- Autorize a análise somente de contas que você administra ou para as quais tem autorização do titular.
+- A leitura automatizada deve respeitar os Termos de Uso do Instagram/Meta; use-a com moderação
+  (poucas dezenas de páginas, na sua própria conta).
+- Os arquivos do perfil ficam só no seu computador. Para apagar, exclua a pasta
+  `~/instagram-legendas/<arroba>/`.
 
 ## 5. Recursos de terceiros
 - **Efeitos sonoros, músicas, imagens e vídeos de apoio** não acompanham o Software. Use apenas
