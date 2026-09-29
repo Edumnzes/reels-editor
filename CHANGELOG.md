@@ -8,6 +8,18 @@
 - `references/onboarding.md`: roteiro do briefing, o que ler no Instagram, regras de segurança e modelos.
 - O perfil passa a definir termos da transcrição, direção visual, cores, CTA e duração alvo.
 - Termos de uso: seção sobre acesso ao Instagram e dados do perfil.
+- **Manual Técnico de Edição** incorporado (`references/manual-edicao.md`, PDF em `docs/`), com precedência
+  sobre as outras referências:
+  - plano editorial antes do corte (objetivo, mensagem central, estrutura, gancho → CTA; CTA só após o benefício);
+  - pausas com função mantidas (`plan_cut.py` com `hold`);
+  - efeitos sonoros seletivos (aviso no `check` acima de ~2 a cada 10 s ou em cortes simples);
+  - legendas animadas por grupo (`caption_anim="group"`), sem animar cada palavra;
+  - correção de cor automática por plano antes do look (`correct=True`, `project.py color`), look `natural` embutido.
+- `scripts/qa.py`: controle de qualidade do arquivo final (bloqueia a entrega em caso de falha).
+- `scripts/decisions.py` + `assets/decisoes_template.json`: registro de decisões no formato do manual e nota 0–5.
+- `scripts/export_ig.py`: Reel, capa, prévia da grade 3:4 e Stories (>60 s). Destino: só Instagram por enquanto.
+- `mix_audio.py`: normalização em duas passadas (a de uma passada ficava em −15,7 LUFS em vídeos curtos)
+  e medição no arquivo de saída.
 
 ## 1.0.0 — 2026-09-29
 Primeira versão no GitHub (uso privado).

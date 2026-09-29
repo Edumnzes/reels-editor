@@ -40,11 +40,13 @@ FIX = {"comerços": "comércios", "brigadão": "obrigadão"}
 # Direction (references/visual-references.md §2): trade show / B2B product -> hormozi captions, no grade.
 STYLE, LOOK = "hormozi", "none"
 FLASHES = []                                   # e.g. [14.3] for a flash cut on the shot change (+ "flash" SFX)
-# One sound per visual event, under the voice. Files: ~/reels-sfx/<category>*.wav (user-supplied, licensed).
-SFX = [(t, "whoosh", -8) for t in [14.3, 35.9, 42.36]] + [
-    (0.1, "whoosh", -8), (0.4, "pop", -10), (18.7, "pop", -10), (21.2, "pop", -10), (23.44, "click", -12),
-    (23.56, "click", -12), (23.68, "click", -12), (26.3, "whoosh", -10), (29.6, "riser", -12), (32.3, "pop", -10),
-    (34.5, "ding", -10), (36.35, "pop", -10), (37.5, "pop", -10), (49.4, "pop", -8)]
+# SFX only on key events (manual 5: selective, ~2 per 10 s max, never on plain cuts).
+# Files: ~/reels-sfx/<category>*.wav (user-supplied, licensed).
+SFX = [(0.1, "whoosh", -10),      # hook entrance
+       (21.2, "pop", -10),        # the product reveal (main card)
+       (29.6, "riser", -12),      # explainer interstitial
+       (34.5, "ding", -10),       # proof: "conta menor"
+       (49.4, "pop", -10)]        # CTA
 
 # ============================================================ MOTIONS
 def mg_hook(ov, t):                       # 0-4.5 s: curiosity hook in the top band

@@ -29,17 +29,22 @@ com o Adobe Podcast Enhance Speech.
 
 | Etapa | Resultado |
 |---|---|
+| Plano editorial | Objetivo, mensagem central, estrutura (problema→solução, antes→depois…) e sequência gancho→CTA antes de cortar |
 | Perfil da marca (1ª vez) | Briefing curto + análise dos Reels e Insights do Instagram; salvo no computador e reaproveitado |
 | Análise | Transcrição com tempo de cada palavra, mapa de pausas, detecção de rostos, resumo do vídeo |
-| Corte | Remove silêncio, respirações, "éé", falsas largadas e repetições; verifica o corte transcrevendo de novo |
+| Corte | Remove pausas **sem função**, respirações, "éé", falsas largadas e repetições; mantém pausas de ênfase; verifica transcrevendo de novo |
 | Câmera virtual | Zooms leves só nos cortes, enquadramento fixo (tripé) ou acompanhamento suave do rosto |
-| Legendas | Palavra por palavra, 3 estilos (Hormozi, minimal/autoridade, cinematográfico), palavras-chave destacadas |
+| Legendas | Sincronizadas com a fala, animadas por grupo (sem animar cada palavra), 3 estilos, palavras-chave destacadas |
 | Motion graphics | Selos, cards, listas, contadores, gráficos e chamada final — posicionados fora do rosto |
-| Cor | Ajustes prontos (natural, clean_warm, teal_orange, moody, vivid_day) com comparação lado a lado |
+| Cor | **Correção** automática por plano (balanço de branco, exposição) e depois o look (natural, clean_warm…) |
 | Áudio | Voz tratada pelo Adobe Podcast + ambiente dosado + volume no padrão do Instagram (−14 LUFS) |
-| Entrega | `Downloads/<nome>_reels_final.mp4` + resumo do que foi feito e pontos para conferir |
+| Controle de qualidade | Resolução, fps, volume, pico, distorção, quadros pretos, imagem congelada, safe zones, excesso de SFX |
+| Nota e registro | Nota 0–5 em 10 dimensões + `decisoes.json` com cada decisão e o motivo |
+| Entrega (Instagram) | Reel, capa, prévia do recorte da grade do perfil e partes para Stories se passar de 60 s |
 
-O fluxo completo, passo a passo, está em [docs/FLUXO.md](docs/FLUXO.md).
+O fluxo completo, passo a passo, está em [docs/FLUXO.md](docs/FLUXO.md). Os critérios de edição seguem o
+[Manual Técnico de Edição](docs/Manual_Tecnico_IA_Editor_Social_Media.pdf), transformado em regras em
+[references/manual-edicao.md](references/manual-edicao.md) — ele prevalece sobre as outras referências.
 
 ## Requisitos
 
@@ -107,7 +112,8 @@ reels-editor/
 ├── CHANGELOG.md
 ├── requirements.txt
 ├── docs/
-│   └── FLUXO.md              # o fluxo completo, do vídeo bruto à entrega
+│   ├── FLUXO.md              # o fluxo completo, do vídeo bruto à entrega
+│   └── Manual_Tecnico_IA_Editor_Social_Media.pdf   # manual de edição (fonte)
 ├── scripts/
 │   ├── setup_env.py          # cria ~/reelsenv e instala dependências
 │   ├── transcribe.py         # transcrição com faster-whisper (tempo por palavra)
@@ -118,9 +124,13 @@ reels-editor/
 │   ├── detect_cuts.py        # confere os cortes visíveis na imagem
 │   ├── mix_audio.py          # mixa voz + ambiente + SFX e normaliza (−14 LUFS)
 │   ├── brand.py              # lê/grava o perfil da marca (~/instagram-legendas/<arroba>/)
+│   ├── qa.py                 # controle de qualidade do arquivo final
+│   ├── decisions.py          # registro de decisões + nota 0–5 (decisoes.json)
+│   ├── export_ig.py          # Reel, capa, prévia da grade e Stories
 │   ├── reels_lib.py          # motor: câmera, legendas, cor, B-roll, SFX, QA, render
 │   └── fx.py                 # animações de texto e fundos (inspiradas no React Bits)
 ├── references/
+│   ├── manual-edicao.md      # critérios do manual de edição (prevalece sobre os demais)
 │   ├── onboarding.md         # briefing + análise do Instagram (1ª vez por marca)
 │   ├── style-guide.md        # números e regras: ritmo, zoom, proporção, legendas
 │   ├── visual-references.md  # direções visuais, cor, SFX, bancos de assets
@@ -128,6 +138,7 @@ reels-editor/
 └── assets/
     ├── example_project.py    # projeto completo de exemplo (copiar e adaptar)
     ├── marca_template.json   # modelo do marca.json
+    ├── decisoes_template.json # modelo do registro de decisões
     ├── *.ttf + OFL.txt       # fontes (SIL Open Font License)
     └── yunet.onnx            # modelo de detecção de rosto (MIT)
 ```
@@ -145,7 +156,11 @@ no Windows, `~/reelsenv/bin/python` no macOS/Linux):
 | `python project.py motion` | Velocidade de pan/zoom e tremidas — deve dar **SMOOTH** |
 | `python project.py strip 5.2 6.2` | Quadros consecutivos para julgar suavidade |
 | `python project.py looks 12` | O mesmo quadro em todos os ajustes de cor |
+| `python project.py color` | Correção de cor por plano + `color.jpg` (antes / corrigido / + look) |
 | `python project.py full render.mp4` | Render final (+ `final_sheet.jpg` para conferência) |
+| `python scripts/qa.py final.mp4 --project project.py` | Controle de qualidade — qualquer FALHA bloqueia a entrega |
+| `python scripts/decisions.py check` / `report` | Registro completo? Tabela de notas para a entrega |
+| `python scripts/export_ig.py final.mp4 --name X --cover 4.3` | Arquivos para o Instagram em Downloads |
 
 ## Perfil da marca
 
@@ -175,8 +190,8 @@ Mostra as marcas que já têm perfil. Para ver ou apagar, é só abrir a pasta �
 
 ## Efeitos sonoros
 
-A skill marca um som para cada evento visual (pop, whoosh, click, ding, flash…), mas **não
-baixa sons sozinha**. Salve arquivos licenciados em:
+Seguindo o manual, os sons são **seletivos**: só nos eventos-chave (gancho, card principal, prova, CTA),
+no máximo ~2 a cada 10 s e nunca em corte simples. A skill **não baixa sons sozinha**. Salve arquivos licenciados em:
 
 ```
 ~/reels-sfx/pop_01.wav

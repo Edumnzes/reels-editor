@@ -1,0 +1,46 @@
+{
+  "versao": 1,
+  "input_video": "",
+  "handle": "",
+  "objective": "",
+  "platform": "instagram_reels",
+  "audience": "",
+  "duration_target": "",
+  "brand_guidelines": {},
+  "editorial_strategy": {
+    "mensagem_central": "",
+    "estrutura": "",
+    "sequencia": {
+      "hook": "",
+      "contexto": "",
+      "desenvolvimento": "",
+      "prova": "",
+      "conclusao": "",
+      "cta": ""
+    },
+    "cold_open": ""
+  },
+  "cut_decisions": [],
+  "kept_pauses": [],
+  "b_roll_decisions": [],
+  "caption_style": {},
+  "audio_strategy": {},
+  "color_strategy": {},
+  "motion_strategy": [],
+  "sfx_strategy": [],
+  "final_output": {},
+  "qa_result": {},
+  "rejected_errors_check": {},
+  "scores": {
+    "narrativa":      {"nota": null, "nota_texto": ""},
+    "ritmo":          {"nota": null, "nota_texto": ""},
+    "audio":          {"nota": null, "nota_texto": ""},
+    "texto":          {"nota": null, "nota_texto": ""},
+    "motion":         {"nota": null, "nota_texto": ""},
+    "cor":            {"nota": null, "nota_texto": ""},
+    "composicao":     {"nota": null, "nota_texto": ""},
+    "plataforma":     {"nota": null, "nota_texto": ""},
+    "acessibilidade": {"nota": null, "nota_texto": ""},
+    "objetivo":       {"nota": null, "nota_texto": ""}
+  }
+}

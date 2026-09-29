@@ -3,6 +3,8 @@
 Read this before planning motions/zooms for a new video. Everything here is tuned for
 1080x1920 @ 30 fps, talking-head + B-roll content (trade shows, product demos, interviews).
 
+> **Manual de edição prevalece.** Onde este guia divergir de `references/manual-edicao.md` (pausas com função, SFX seletivo, legenda por grupo, correção antes do look), vale o manual.
+
 ## Contents
 1. Reference editors (what to borrow)
 2. Pacing & retention
@@ -18,7 +20,7 @@ Read this before planning motions/zooms for a new video. Everything here is tune
 | Reference | Borrow | Avoid |
 |---|---|---|
 | Alex Hormozi | word-by-word captions, ALL CAPS, yellow keyword, thick stroke | emojis on every line (reads cheap for B2B) |
-| Ali Abdaal | clean animated text, icons that explain, subtle SFX on every animation | long flat talking-head stretches |
+| Ali Abdaal | clean animated text, icons that explain, subtle SFX on the key animations | long flat talking-head stretches |
 | Iman Gadzhi | fast cuts, Montserrat, punch-ins on impact lines | heavy glitch transitions |
 | MrBeast | something changes on screen every 2–4 s, no dead air | shouting pace — keep it credible for technical audiences |
 Techniques: J-cut / L-cut (audio leads/lags the picture across a shot change), speed ramp on
@@ -26,7 +28,8 @@ B-roll, alternating 10–15 % punch-ins across jump cuts (fakes a 2-camera shoot
 
 ## 2. Pacing & retention
 - Hook in the first 3 s: a question or promise on screen + the event/brand badge. Primary keyword on screen in the first 3 s (on-screen text is OCR-indexed for search/Explore).
-- Something changes every 2–4 s: a caption group, a punch-in, a card, a shot change.
+- Something relevant changes every few seconds (a caption group, a card, a shot change) — but retention is not
+  frantic editing: keep a shot while it still informs, never cut so fast that understanding suffers (manual §3).
 - Each graphic enters on the word it illustrates and leaves before the topic changes. Graphics must clarify, prove, compare or add context — never decorate.
 - Explainer "interstitial" (blurred/darkened background + big card) goes over B-roll, where no face is lost.
 - CTA in the last ~3 s.
@@ -154,7 +157,8 @@ B-roll (engine `broll=[...]`)
 
 ## 6. Captions
 - Montserrat Black, UPPERCASE, 62 px (`xl`), 6 px stroke + soft shadow, 1–3 words (≤ 20 chars), centred on y = 1300 (lower third), break on punctuation or gaps > 0.4 s.
-- Each word pops (0.55→1.0 with ease-out back, 160 ms) at its onset; the word being spoken is 8 % bigger; keywords yellow.
+- The caption group enters once (180 ms ease-out); the word being spoken is only emphasised (≈6 % bigger), never its own
+  animation (manual §7, engine `caption_anim="group"`); keywords in the accent colour only when they help understanding.
 - Fix transcription errors via `fix`; merge brand tokens (`join_next={"RISE"}`, `join_prev={"kWh"}`).
 
 ## 7. Motion-graphic patterns
@@ -174,7 +178,8 @@ B-roll (engine `broll=[...]`)
 - Adobe Podcast Enhance Speech (Adobe connector `media_enhance_speech`) returns speech / background / reverb stems.
   Mix speech + 0.25–0.4 background for location shots (keeps the room real), 0 for indoor.
 - Loudness −14 LUFS integrated, true peak ≤ −1 dBTP (mix_audio.py). Instagram normalizes around −14.
-- Optional SFX (whoosh on slides, pop on counters) only with licensed files from the user, ~−20 dB under voice.
+- SFX are selective (manual §5): key events only (hook, main card, proof, CTA), ~2 per 10 s max, never on plain cuts,
+  licensed files from the user only.
 
 ## 9. Sources
 - OpusClip — Reels caption best practices: https://www.opus.pro/blog/instagram-reels-caption-subtitle-best-practices

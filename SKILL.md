@@ -12,7 +12,10 @@ Talk to them in their language, in plain words.
 
 The heavy lifting is done by bundled scripts; your job is the editorial judgement:
 what to cut, where each graphic goes, what it says, and checking the result.
-Read `references/style-guide.md` before planning motions (incl. §5 proportion and §5b motion/B-roll rules) — it holds the numbers
+**Read `references/manual-edicao.md` first** — the owner's editing manual turned into rules (5 layers:
+objective → message → narrative → execution → distribution; editorial plan before cutting; functional
+pauses; selective SFX; correction before grading; QA; 0–5 scorecard; errors to reject). It takes
+precedence over every other reference when they disagree. Then read `references/style-guide.md` before planning motions (incl. §5 proportion and §5b motion/B-roll rules) — it holds the numbers
 (timings, easing, spacing, safe zones) and the reasoning behind them — and
 `references/visual-references.md` to pick a direction (caption style, colour look, SFX, angles,
 asset banks) from the reference reels the user chose, and `references/reactbits.md` for the animation bank.
@@ -67,8 +70,17 @@ python scripts/faces.py RAW.MOV faces_raw.json --sheet sheet_raw.jpg
 Look at the contact sheet (Read the jpg). Then give the user:
 - the main points of the video (3–6 bullets);
 - a map table: time | shot (who is on screen / B-roll) | speech | best treatment there.
+
+### 1b. Editorial plan — think before cutting (manual §2)
+Before choosing phrases, decide and show with the map: **objective**, **audience**, **central message**
+(one sentence), **target duration** (from `marca.json`), **structure** (problem→solution, before→after,
+claim→proof, curiosity→reveal, error→fix, process→result, story→lesson) and the **sequence**
+hook → context → development → proof → conclusion → CTA, naming the speech that fills each part.
+Reorder phrases when the recorded order doesn't serve the story; the CTA only comes after the benefit is
+clear. Start the log: `python scripts/decisions.py init RAW.MOV --handle <handle>` and fill
+`objective`, `audience`, `duration_target`, `editorial_strategy`.
 If the user already asked you to just go ahead, continue without waiting; otherwise wait
-for a quick OK on the map — it is cheap to adjust now and expensive after rendering.
+for a quick OK on the map + plan — it is cheap to adjust now and expensive after rendering.
 
 ## 2. Clean cut
 
@@ -79,9 +91,13 @@ python scripts/plan_cut.py RAW.MOV phrases.json keep.json      # prints segments
 ```
 A strong line from later in the video makes a great 1–2 s cold open (put it first in phrases.json).
 Remove:
-dead head/tail, pauses > ~0.3 s, breaths, "éé", drawn-out syllables, false starts and the
+dead head/tail, pauses **without a function**, breaths, "éé", drawn-out syllables, false starts and the
 wrong half of self-corrections ("261 kilowatts de kilowatts horas" → keep "261 … kilowatts horas"),
 content the second speaker repeats, long thank-yous (keep a short one).
+**Keep functional pauses** (emphasis before a number, humour, emotion, time to read something visual):
+`[s, e, {"hold": [t], "why": "..."}]` in phrases.json keeps that pause (≤ 0.7 s). More cuts is not more
+professional — never trade intelligibility for speed. Log every removed stretch in `cut_decisions`
+(`{"raw": [s, e], "texto": "...", "motivo": "..."}`) and every kept pause in `kept_pauses`.
 
 Whisper stretches word timings over pauses, so a "word" lasting 1–3 s usually hides a pause.
 Place cuts with the 50 ms energy dump inside the dip between words:
@@ -117,7 +133,9 @@ Only the audio goes to Adobe (smaller, and the picture never leaves the machine)
    away (presigned URLs expire).
 4. After the final render: `python scripts/mix_audio.py render.mp4 speech.wav final.mp4 --bg background.wav --bg-level 0.35 --sfx sfx.wav`
    (`--sfx` re-adds the SFX timeline that `project.py full` wrote, since this step replaces the audio)
-   (0.25–0.4 for noisy locations so it doesn't sound pasted-on; 0 indoors). Report the LUFS it prints (target ≈ −14).
+   (0.25–0.4 for noisy locations so it doesn't sound pasted-on; 0.1–0.2 indoors). It normalises in two passes and
+   prints the loudness measured on the OUTPUT file — report that number (target −14 LUFS, peak ≤ −1 dBTP).
+   Music is not configured yet: don't add music. Log the treatment in `audio_strategy`.
 If the Adobe connector isn't available, say so and still normalize with mix_audio.py using the original audio as "speech".
 
 ## 3b. Direction: captions, colour, sound
@@ -130,8 +148,12 @@ when this video clearly needs it, and say why. With no profile, pick one row of 
 reflective → moody; outdoor → cinematic/vivid_day). If it isn't obvious, render `python project.py looks <t>`
 and a one-frame preview per caption style and let the user choose — it's quick and sets the whole feel.
 
-Sound effects: every visual event gets one (pop on cards, whoosh on slides/shot changes, flash on flash cuts,
-ding on results) at −6…−14 dB. The engine reads user-supplied files from `~/reels-sfx/<category>*.wav`.
+Colour (manual §9): the engine corrects each shot first (white balance from neutrals, exposure only for dark
+shots — `correct=True`), then applies the look. Default look `natural`; another look only with a reason (brand,
+genre). Check `python project.py color` → color.jpg (antes / corrigido / + look), look at skin, log in `color_strategy`.
+
+Sound effects are **selective** (manual §5): only on key events — hook entrance, the main card, a proof/result,
+the CTA — about 2 per 10 s at most, never on plain cuts, at −8…−14 dB. `project.py check` warns above that. The engine reads user-supplied files from `~/reels-sfx/<category>*.wav`.
 If that folder is missing or a category is absent, the render reports it; tell the user which categories to
 download (Mixkit/Pixabay are free for commercial use; Motion Array/Envato/Artlist if they subscribe) and where
 to save them. Don't download assets yourself without the user's explicit OK.
@@ -162,6 +184,11 @@ Copy `assets/example_project.py` to the project folder as `project.py` and rewri
 - `BG`: dim/blur windows under big cards (blur 1.0 + dim .6 for explainer interstitials).
 - `KEYWORDS`, `FIX`, `join_next`/`join_prev` for captions; `STYLE` (hormozi | minimal | cinematic),
   `LOOK` (colour grade), `FLASHES`, `SFX` from the direction step.
+  Captions animate **per group** (`caption_anim="group"`, default): the group enters once and the spoken word
+  only gets emphasis — never an independent animation per word (manual §7). Highlight keywords only when that
+  helps understanding. `correct=True` (default) keeps colour correction on.
+- Every motion must have a function (explain, prove, situate, call to action) — write it in
+  `motion_strategy` (`{"t": 3.5, "elemento": "card marca", "funcao": "situa quem fala"}`). No function → no motion.
 - Motion functions `mg_*(ov, t)`: one per idea, entering on the word it illustrates. Use `pill()`
   and `text_w()` so boxes size to their text, `slot(t0, t1, h, prefer)` for vertical placement
   (face-aware), the band constants, and the pattern catalogue in the style guide.
@@ -192,6 +219,7 @@ python project.py check                            # face-collision + safe-area 
 python project.py cuts                             # per cut: zoom step or not, and why
 python project.py motion                           # camera QA: lock/track (+why), pan/zoom speed, wobble -> must say SMOOTH
 python project.py strip 5.2 6.2                    # consecutive frames around a punch-in / pan
+python project.py color                            # colour correction per shot + color.jpg
 python project.py full render.mp4                  # ~4 min per minute of video; also writes final_sheet.jpg
 ```
 Read every preview/strip/sheet image. The debug overlay tints the unsafe zones red (judge colour on a
@@ -202,15 +230,32 @@ compact layout while the face is on screen); warnings during a slide-in/slide-ou
 is leaving the frame are acceptable. In strips, look for jumps in framing between consecutive
 frames — if the camera twitches, raise `smooth_sigma`/`deadzone` or remove a punch-in.
 
+### 6b. Export QA — mandatory (manual §12)
+```
+python scripts/qa.py final.mp4 --project project.py      # resolution, fps, duration, loudness, peak, clipping,
+                                                          # black/frozen frames, full decode, graphics/safe zone/SFX
+```
+Any FALHA blocks delivery: fix and re-run. It writes qa.json and fills `decisoes.json → qa_result`.
+Still yours to do by eye: `final_sheet.jpg`, caption text, names, numbers, dates, colour across shots.
+
+### 6c. Decision log + score (manual §13–14)
+Fill the rest of `decisoes.json` (b_roll, caption_style, final_output, `rejected_errors_check` — true for each
+error avoided) and the **0–5 scores** in the 10 dimensions, honestly; ≤ 3 needs a reason and, when possible, what
+would raise it. `python scripts/decisions.py check` must say COMPLETAS; `report` prints the table for the reply.
+
 ## 7. Deliver
 
-Save to the user's Downloads as `<name>_reels_final.mp4` (after mix_audio). Reply with:
+Instagram only for now:
+`python scripts/export_ig.py final.mp4 --name <name> --cover <t>` → Downloads: `<name>_reels_final.mp4`,
+`<name>_capa.jpg` (cover), `<name>_capa_grade.jpg` (3:4 profile-grid crop — check the title/face fit inside it),
+and `<name>_story_N.mp4` only if the video is longer than 60 s. Reply with:
 - where the file is and its duration;
 - a table: time | what was added (captions style, zooms, each motion);
 - what was cut;
 - points to double-check (technical facts shown on screen, e.g. tariff hours; CTA handle; SFX categories that were missing);
 - when relevant, what the engine can't do that would lift the video (text behind the subject, 3D-tracked text, a reshoot angle) — see visual-references §8;
+- the scorecard (`decisions.py report`: 10 dimensions, average, lowest) and the QA verdict;
 - a one-line offer for adjustments.
-Then log it: `python scripts/brand.py log <handle> "<name> · <duration> · <topic>"`, and write any preference the
+Archive the log: `python scripts/decisions.py archive <handle> <name>`. Then log it: `python scripts/brand.py log <handle> "<name> · <duration> · <topic>"`, and write any preference the
 user expressed during this edit back to `marca.json` / `video.md`.
 Keep the project folder — the user may ask for tweaks, and re-rendering from project.py is cheap.

@@ -102,6 +102,7 @@ GRADES = {
     "clean_warm":  dict(lift=(14, 11, 6), gain=(1.0, .98, .93), gamma=(1.0, 1.0, 1.02), contrast=.9, sat=.86, vig=.10),   # cream, soft, "autoridade" (oraulcharles)
     "teal_orange": dict(lift=(0, 8, 14), gain=(1.04, .99, .9), gamma=(.97, 1.0, 1.04), contrast=1.12, sat=1.06, vig=.18),  # warm skin, teal shadows (obiel)
     "moody":       dict(lift=(4, 3, 8), gain=(.96, .92, .88), gamma=(1.08, 1.1, 1.08), contrast=1.18, sat=.82, vig=.35),    # low-key, dark, practical lights (raele)
+    "natural":     dict(lift=(0, 0, 0), gain=(.98, 1.0, 1.02), gamma=(1.0, 1.0, .99), contrast=1.04, sat=1.02, vig=.05),  # near-neutral, after correction
     "vivid_day":   dict(lift=(0, 0, 4), gain=(1.03, 1.01, .98), gamma=(.98, .98, 1.0), contrast=1.1, sat=1.15, vig=.12),    # outdoor, punchy (rick_miura)
 }
 _gc = {}
@@ -308,7 +309,8 @@ class Reel:
                  join_next=(), join_prev=(), cap_y=CAP_Y, face_anchor=.40, camera="auto", deadzone=.05, max_speed=.22,
                  max_accel=.6, lock_spread=(.14, .09), z_max=1.25, scene_bump=0.0,
                  caption_style="hormozi", accent=YEL, look="none", flashes=(), sfx=(), sfx_dir=None,
-                 jumpcuts="auto", cuts=(), jump_zoom=1.07, min_face=40, hide_captions=(), broll=()):
+                 jumpcuts="auto", cuts=(), jump_zoom=1.07, min_face=40, hide_captions=(), broll=(),
+                 caption_anim="group", correct=True):
         # cuts: EVERY keep.json join in the cut timeline. jumpcuts="auto": the engine decides per cut whether a
         # zoom step is needed (visible jump on the same framing) or not (framing already changes, close-up,
         # B-roll, graphic entering, too soon) — see `python project.py cuts`. A list forces those cuts.
@@ -333,6 +335,11 @@ class Reel:
                 ch = min(ch, 720); b["clip"] = _Clip(b["src"], b["ss"], cw, ch, True); b["size"] = (cw, ch)
             self.broll.append(b)
         self.cs = CAPTION_STYLES[caption_style]; self.accent = accent; self.look = look
+        # caption_anim: "group" = each caption group enters once and the spoken word is only emphasised
+        #   (manual 9.2: do not turn every word into its own animation); "word" = legacy per-word pop.
+        # correct: technical colour correction per shot BEFORE the look (manual 11): exposure + white balance
+        #   measured on the footage, limited strength so skin stays natural. `python project.py color` shows it.
+        self.cap_anim, self.correct, self._corr = caption_anim, correct, None
         self.flashes, self.sfx = list(flashes), list(sfx)
         self.sfx_dir = Path(sfx_dir) if sfx_dir else Path.home() / "reels-sfx"
         self.src = src
@@ -410,10 +417,13 @@ class Reel:
         k = min(1.0, (W - 2 * SAFE_SIDE) / tot)
         x = W / 2 - tot * k / 2
         for tk, sp, vw in items:
-            st = tk["s"] - .04
+            st = g["s"] if self.cap_anim == "group" else tk["s"] - .04
             if t >= st:
-                p = (t - st) / .16
-                if cs["upper"]:                        # punchy pop
+                p = (t - st) / (.18 if self.cap_anim == "group" else .16)
+                if cs["upper"] and self.cap_anim == "group":   # one entrance per group; spoken word emphasised
+                    sc = (.9 + .1 * eo(p)) * k; dy = 0
+                    if tk["s"] <= t < tk["e"] + .05: sc *= 1.06
+                elif cs["upper"]:                      # legacy: punchy pop per word
                     sc = (.55 + .45 * eback(p)) * k; dy = 0
                     if tk["s"] <= t < tk["e"] + .05: sc *= 1.08
                 else:                                  # minimal: soft rise + fade, no bounce
@@ -656,6 +666,50 @@ class Reel:
         for a_, b_, msg in merged: print(f"  ISSUE {a_:6.2f}-{b_:6.2f}s  {msg}")
         print("verdict:", "SMOOTH" if not merged else f"{len(merged)} issue(s) — fix before rendering")
 
+    # ------------------------------------------------------------ colour correction (before the look)
+    def _build_correction(self):
+        """Per shot (between SCENES): white balance from near-neutral pixels (grey world, clipped to +-10 %,
+        70 % strength, normalised so no channel goes down) and exposure (brightens dark shots only, max +15 %).
+        Gains use a highlight roll-off (255 stays 255) so walls and skies neither clip nor turn grey."""
+        bounds = sorted({0.0, self.dur, *[x for x in self.scenes if 0 < x < self.dur]})
+        self._corr = []
+        for a, b in zip(bounds, bounds[1:]):
+            smp = []
+            for k in range(5):
+                fr = next(self.frames(a + (b - a) * (k + .5) / 5, 1), None)
+                if fr is not None: smp.append(cv2.resize(fr, (90, 160), interpolation=cv2.INTER_AREA))
+            g, e, note = np.ones(3), 1.0, "sem amostra"
+            if smp:
+                x = np.concatenate([q.reshape(-1, 3) for q in smp]).astype(np.float32) / 255
+                lum = x @ np.float32([.299, .587, .114]); mx, mn = x.max(1), x.min(1); sat = (mx - mn) / (mx + 1e-6)
+                neu = x[(sat < .18) & (lum > .2) & (lum < .92)]
+                if len(neu) > 200:
+                    m = neu.mean(0); g = 1 + (np.clip(m.mean() / m, .9, 1.1) - 1) * .7
+                    g = g / g.min()                    # only lift channels: white stays white, nothing gets dimmer
+                med = float(np.median(lum)); clip_hi = float((lum > .985).mean())
+                if med < .36: e = float(np.clip(.42 / med, 1, 1.15))   # brighten clearly dark shots only;
+                # bright high-key scenes (white walls) are left alone - darkening them turns white into grey
+                note = f"luma {med:.2f}, neutros {len(neu)}" + (f", {clip_hi:.0%} estourado" if clip_hi > .05 else "")
+            x = np.arange(256, dtype=np.float32) / 255; luts = []
+            for c in range(3):
+                kk = float(g[c] * e)
+                y = x * kk / (1 + (kk - 1) * x) if kk > 1 else x * kk
+                luts.append(np.clip(y * 255, 0, 255).astype(np.uint8))
+            self._corr.append((a, b, tuple(round(float(v), 3) for v in g), round(e, 3), note, luts))
+
+    def color_correct(self, img, t):
+        if not self.correct: return img
+        if self._corr is None: self._build_correction()
+        seg = next((c for c in self._corr if c[0] <= t < c[1]), self._corr[-1])
+        return np.dstack([cv2.LUT(img[..., c], seg[5][c]) for c in range(3)])
+
+    def color_report(self):
+        if self._corr is None: self._build_correction()
+        print(f"correção de cor por plano (antes do look '{self.look}'):")
+        for a, b, g, e, note, _ in self._corr:
+            print(f"  {a:6.2f}-{b:6.2f}s  ganho RGB {g}  exposição x{e}  ({note})")
+        return [dict(t0=a, t1=b, wb_gain=g, exposure=e) for a, b, g, e, _, _ in self._corr]
+
     def camera(self, frame, t):
         x0, y0, s = self.crop(t)
         M = np.float32([[s, 0, -x0 * s], [0, s, -y0 * s]])
@@ -678,6 +732,18 @@ class Reel:
         return img
 
     # ------------------------------------------------------------ sound effects
+    def sfx_report(self):
+        """Manual 7.3 / 21: SFX are selective. Warn on density and on sounds placed on plain cuts."""
+        msgs = []
+        if not self.sfx: return msgs
+        per10 = len(self.sfx) / max(self.dur, 1) * 10
+        if per10 > 2.0:
+            msgs.append(f"SFX: {len(self.sfx)} em {self.dur:.0f}s ({per10:.1f} a cada 10 s) - use só nos eventos-chave (máx ~2/10 s)")
+        on_cuts = [t for t, *_ in self.sfx if any(abs(t - c) < .12 for c in self.cuts if c > 0)]
+        if len(on_cuts) > 2:
+            msgs.append(f"SFX: {len(on_cuts)} sons em cortes simples {['%.1f' % x for x in on_cuts]} - corte não precisa de som")
+        return msgs
+
     def _sfx_file(self, name):
         p = Path(name)
         if p.suffix and p.exists(): return p
@@ -733,7 +799,7 @@ class Reel:
             paste(ov, im, W / 2, cy, s, a)
 
     def compose(self, frame, t, debug=False):
-        img = self.bg_fx(self._broll_full(grade(self.camera(frame, t), self.look), t), t)
+        img = self.bg_fx(self._broll_full(grade(self.color_correct(self.camera(frame, t), t), self.look), t), t)
         ov = Image.new("RGBA", (W, H))
         self._broll_cards(ov, t)
         for m in self.motions: m(ov, t)
@@ -786,6 +852,7 @@ class Reel:
         strip t0 t1 [step_frames]      -> strip.jpg: consecutive frames to judge smoothness
         check [step]                   -> collision/safe-area report over the whole video
         cuts                           -> per cut: zoom step or not, and why (jumpcuts="auto")
+        color                          -> colour correction per shot + color.jpg (antes / corrigido / + look)
         motion                         -> camera QA: lock/track per range, pan & zoom speeds, wobble, verdict
         full out.mp4                   -> final render (audio copied from src, SFX mixed in, sfx.wav kept)
         looks [t]                      -> looks.jpg: the same frame in every colour grade, to pick one with the user
@@ -812,7 +879,18 @@ class Reel:
             while t < self.dur:
                 for m in self.check_collisions(t): print("WARN", m); n += 1
                 t += step
+            for m in self.sfx_report(): print("WARN", m); n += 1
             print(f"{n} warnings")
+        elif cmd == "color":                           # correction per shot + before/after sheet
+            self.color_report(); tiles = []
+            for a, b, *_ in self._corr:
+                t = (a + b) / 2; fr = self.camera(next(self.frames(t, 1)), t)
+                for lab, im in (("antes", fr), ("corrigido", self.color_correct(fr, t)),
+                                ("+ " + self.look, grade(self.color_correct(fr, t), self.look))):
+                    im = Image.fromarray(im).resize((360, 640), Image.LANCZOS)
+                    ImageDraw.Draw(im).text((12, 12), f"{t:.1f}s {lab}", font=font(26, "Bold"), fill=WHITE, stroke_width=3, stroke_fill=BLACK)
+                    tiles.append(im)
+            self._sheet(tiles, "color.jpg", cols=3)
         elif cmd == "full":
             out = args[0]
             enc = subprocess.Popen([FFM, "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS),

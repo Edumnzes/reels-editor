@@ -67,7 +67,9 @@ style when the direction isn't obvious — it's a 1-minute decision that changes
 - Fonts bundled (OFL, commercial OK): Montserrat, Libre Baskerville Italic, Bebas Neue, Caveat. Cocogoose/Neulis/Fixture are commercial/trial fonts — only if the user owns a licence.
 
 ## 4. Sound effects
-Every visual event gets a sound, ~−6 to −12 dB under the voice (Ali Abdaal / obiel): 
+Sounds are **selective** (manual §5): only the key events — hook entrance, main card, proof/result, CTA — about
+2 per 10 s at most, never on plain cuts (one sound per cut causes fatigue). ~−8 to −14 dB under the voice.
+Which sound for which event:
 | Event | SFX category (file prefix) | gain |
 |---|---|---|
 | Card / pill pops in | `pop` or `click` | −10 |
