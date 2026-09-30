@@ -34,7 +34,7 @@ REJECT = [  # manual 21: errors the editor must reject - each one answered true 
     "broll_sem_relacao", "imagem_gerada_incorreta", "cta_antes_do_beneficio", "tendencia_sem_objetivo",
     "introducao_longa", "mesmo_estilo_para_todo_nicho",
 ]
-REQUIRED = ["input_video", "objective", "audience", "duration_target", "editorial_strategy", "cut_decisions",
+REQUIRED = ["input_video", "formato", "objective", "audience", "duration_target", "editorial_strategy", "cut_decisions",
             "caption_style", "audio_strategy", "color_strategy", "motion_strategy", "final_output", "qa_result"]
 P = Path("decisoes.json")
 

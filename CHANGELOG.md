@@ -18,6 +18,14 @@
 - `scripts/qa.py`: controle de qualidade do arquivo final (bloqueia a entrega em caso de falha).
 - `scripts/decisions.py` + `assets/decisoes_template.json`: registro de decisões no formato do manual e nota 0–5.
 - `scripts/export_ig.py`: Reel, capa, prévia da grade 3:4 e Stories (>60 s). Destino: só Instagram por enquanto.
+- **Formatos (templates)**: 12 formatos escolhidos a partir de referências validadas no Instagram, selecionados
+  pelo usuário logo após o briefing (3 recomendados + lista completa). `references/formatos.md` (estrutura, edição,
+  motions, guia de gravação), `assets/formatos.json` (padrões), `scripts/formats.py` (motions: dica numerada,
+  progresso, capítulo, citação, nome, antes/depois, react, clone, frase grande, leia a legenda, série, próximo
+  episódio, Dia X, CTAs) e `scripts/compose.py` (split / clone / assemble).
+- Legendas e textos alinhados pela linha de base da fonte (`glyph_mid`/`baseline_for`): palavras com letras que
+  descem ("que", "g") não sobem mais em relação às outras.
+- Marca: `formatos_preferidos` e `series` no `marca.json`; registro: campo `formato` no `decisoes.json`.
 - `mix_audio.py`: normalização em duas passadas (a de uma passada ficava em −15,7 LUFS em vídeos curtos)
   e medição no arquivo de saída.
 

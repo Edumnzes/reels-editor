@@ -1,6 +1,6 @@
 ---
 name: reels-editor
-description: Edit raw phone videos into dynamic Instagram Reels / TikTok / Shorts (9:16) — cut pauses, breaths, stumbles and repeated takes; add Hormozi-style word-by-word captions; face-tracked smooth zooms/punch-ins; explanatory motion graphics (hook, product cards, charts, counters, CTA); colour-grade looks; sound effects; and studio-clean voice via Adobe Podcast Enhance Speech. Starts with a one-time brand onboarding (short briefing + read-only analysis of the user's Instagram Reels and insights, saved on disk and reused). Knows reference styles (Hormozi, minimal/authority, flash cut, moody, cinematic text) and asset banks (Motion Array, Envato, Artlist, Mixkit, Pixabay). Use this whenever the user shares a .MOV/.MP4 and mentions reels, stories, shorts, TikTok, "legendas dinâmicas", "cortar pausas", "zoom", "motion", "editar vídeo para o Instagram", or wants another video "como aquele" — even if they only ask for one part (just captions, just the cut, just the audio).
+description: Edit raw phone videos into dynamic Instagram Reels / TikTok / Shorts (9:16) — cut pauses, breaths, stumbles and repeated takes; add Hormozi-style word-by-word captions; face-tracked smooth zooms/punch-ins; explanatory motion graphics (hook, product cards, charts, counters, CTA); colour-grade looks; sound effects; and studio-clean voice via Adobe Podcast Enhance Speech. Starts with a one-time brand onboarding (short briefing + read-only analysis of the user's Instagram Reels and insights, saved on disk and reused), then the user picks one of 12 validated format templates (talking head + pop-ups, quick tips, story, testimonial, react split-screen, clone, identification phrase, content-in-caption, voiceover, series, strong visual hook / Day X, multitask). Knows reference styles (Hormozi, minimal/authority, flash cut, moody, cinematic text) and asset banks (Motion Array, Envato, Artlist, Mixkit, Pixabay). Use this whenever the user shares a .MOV/.MP4 and mentions reels, stories, shorts, TikTok, "legendas dinâmicas", "cortar pausas", "zoom", "motion", "editar vídeo para o Instagram", or wants another video "como aquele" — even if they only ask for one part (just captions, just the cut, just the audio).
 ---
 
 # Reels editor
@@ -48,6 +48,25 @@ The profile then drives the edit: `transcricao_termos` → `--prompt` of transcr
 (caption style, look, target length, hook, things to avoid) → direction (3b) and cut length (2);
 `cores`/`fontes`/`logo`/`cta` → `project.py` via `from brand import load_brand` (step 5).
 Anything the user corrects during the edit ("não gosto dessa cor") is written back to `marca.json`.
+
+## B. Video format — chosen by the user, right after the brand profile
+
+Every video is edited to one **format template** (`references/formatos.md`; defaults in `assets/formatos.json`,
+read with `from formats import fmt`). The 12 formats: `fala_popups`, `dicas_rapidas`, `historia`, `depoimento`,
+`react`, `clone`, `frase_identificacao`, `conteudo_legenda`, `voiceover`, `serie`, `gancho_visual`, `multitarefa`.
+1. Look at what was recorded (quick `faces.py --sheet` of the raw) + the brand's `video.md` and objective.
+2. Ask with `AskUserQuestion`: the **3 formats that best fit this footage and brand** (first = recommended, one
+   line each on why) + a 4th option "Ver todos os formatos". If they pick it, show the grouped list
+   (fala / prova / imagem / visual) in a second question set. `marca.json → formatos_preferidos` goes first.
+3. If the footage can't deliver the format (Clone without a locked camera, React without a reference clip,
+   Voiceover without narration), say so plainly and give that format's **recording guide** ("Gravar") instead of
+   forcing it.
+4. The format then sets: structure (feeds 1b), montage (`compose.py split | clone | assemble` BEFORE step 1 when
+   it needs several sources), target duration, rhythm, `cap_y`, zoom policy, SFX budget and which
+   `formats.py` motions to use (`tip_card`, `name_card`, `before_after`, `quote_card`, `react_label`,
+   `speaker_tag`, `big_phrase`, `read_caption`, `series_badge`, `next_episode`, `day_title`, `chapter_label`,
+   `cta_save`, `cta_follow`). Record it in `decisoes.json → formato` and add it to `formatos_preferidos` when the
+   user likes the result. Series: keep name/episode/identity in `marca.json → series`.
 
 ## 0. Environment (once per machine, ~2 min)
 

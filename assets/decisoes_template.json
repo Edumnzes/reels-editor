@@ -2,6 +2,11 @@
   "versao": 1,
   "input_video": "",
   "handle": "",
+  "formato": {
+    "id": "",
+    "motivo": "",
+    "fontes": []
+  },
   "objective": "",
   "platform": "instagram_reels",
   "audience": "",
@@ -32,15 +37,45 @@
   "qa_result": {},
   "rejected_errors_check": {},
   "scores": {
-    "narrativa":      {"nota": null, "nota_texto": ""},
-    "ritmo":          {"nota": null, "nota_texto": ""},
-    "audio":          {"nota": null, "nota_texto": ""},
-    "texto":          {"nota": null, "nota_texto": ""},
-    "motion":         {"nota": null, "nota_texto": ""},
-    "cor":            {"nota": null, "nota_texto": ""},
-    "composicao":     {"nota": null, "nota_texto": ""},
-    "plataforma":     {"nota": null, "nota_texto": ""},
-    "acessibilidade": {"nota": null, "nota_texto": ""},
-    "objetivo":       {"nota": null, "nota_texto": ""}
+    "narrativa": {
+      "nota": null,
+      "nota_texto": ""
+    },
+    "ritmo": {
+      "nota": null,
+      "nota_texto": ""
+    },
+    "audio": {
+      "nota": null,
+      "nota_texto": ""
+    },
+    "texto": {
+      "nota": null,
+      "nota_texto": ""
+    },
+    "motion": {
+      "nota": null,
+      "nota_texto": ""
+    },
+    "cor": {
+      "nota": null,
+      "nota_texto": ""
+    },
+    "composicao": {
+      "nota": null,
+      "nota_texto": ""
+    },
+    "plataforma": {
+      "nota": null,
+      "nota_texto": ""
+    },
+    "acessibilidade": {
+      "nota": null,
+      "nota_texto": ""
+    },
+    "objetivo": {
+      "nota": null,
+      "nota_texto": ""
+    }
   }
 }

@@ -23,12 +23,17 @@
   "edicao": {
     "caption_style": "hormozi",
     "look": "none",
-    "duracao_alvo_s": [20, 45],
+    "duracao_alvo_s": [
+      20,
+      45
+    ],
     "ritmo": "medio",
     "gancho": "",
     "evitar": []
   },
   "transcricao_termos": [],
   "keywords": [],
-  "fix": {}
+  "fix": {},
+  "formatos_preferidos": [],
+  "series": {}
 }

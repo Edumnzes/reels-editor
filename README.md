@@ -29,6 +29,7 @@ com o Adobe Podcast Enhance Speech.
 
 | Etapa | Resultado |
 |---|---|
+| Formato (template) | Você escolhe 1 de 12 formatos validados (fala + pop-ups, dicas, história, depoimento, react, clone, frase, conteúdo na legenda, voiceover, série, gancho visual, multitarefa) |
 | Plano editorial | Objetivo, mensagem central, estrutura (problema→solução, antes→depois…) e sequência gancho→CTA antes de cortar |
 | Perfil da marca (1ª vez) | Briefing curto + análise dos Reels e Insights do Instagram; salvo no computador e reaproveitado |
 | Análise | Transcrição com tempo de cada palavra, mapa de pausas, detecção de rostos, resumo do vídeo |
@@ -127,10 +128,13 @@ reels-editor/
 │   ├── qa.py                 # controle de qualidade do arquivo final
 │   ├── decisions.py          # registro de decisões + nota 0–5 (decisoes.json)
 │   ├── export_ig.py          # Reel, capa, prévia da grade e Stories
+│   ├── formats.py            # padrões e motions de cada formato
+│   ├── compose.py            # split (react), clone e assemble (clipes + narração)
 │   ├── reels_lib.py          # motor: câmera, legendas, cor, B-roll, SFX, QA, render
 │   └── fx.py                 # animações de texto e fundos (inspiradas no React Bits)
 ├── references/
 │   ├── manual-edicao.md      # critérios do manual de edição (prevalece sobre os demais)
+│   ├── formatos.md           # os 12 formatos: estrutura, edição, motions e guia de gravação
 │   ├── onboarding.md         # briefing + análise do Instagram (1ª vez por marca)
 │   ├── style-guide.md        # números e regras: ritmo, zoom, proporção, legendas
 │   ├── visual-references.md  # direções visuais, cor, SFX, bancos de assets
@@ -139,6 +143,7 @@ reels-editor/
     ├── example_project.py    # projeto completo de exemplo (copiar e adaptar)
     ├── marca_template.json   # modelo do marca.json
     ├── decisoes_template.json # modelo do registro de decisões
+    ├── formatos.json         # padrões de máquina de cada formato
     ├── *.ttf + OFL.txt       # fontes (SIL Open Font License)
     └── yunet.onnx            # modelo de detecção de rosto (MIT)
 ```
@@ -161,6 +166,23 @@ no Windows, `~/reelsenv/bin/python` no macOS/Linux):
 | `python scripts/qa.py final.mp4 --project project.py` | Controle de qualidade — qualquer FALHA bloqueia a entrega |
 | `python scripts/decisions.py check` / `report` | Registro completo? Tabela de notas para a entrega |
 | `python scripts/export_ig.py final.mp4 --name X --cover 4.3` | Arquivos para o Instagram em Downloads |
+
+## Formatos
+
+Depois do perfil da marca, a skill recomenda **3 formatos** para o vídeo (e mostra os 12 se você quiser).
+Cada formato define estrutura, ritmo, duração, disposição na tela, motions e traz um **guia de gravação** —
+se o material não serve ao formato escolhido, a skill avisa e explica como gravar.
+
+| Grupo | Formatos |
+|---|---|
+| Fala para câmera | Fala + pop-ups · Dicas rápidas · História / narrativa |
+| Prova e reação | Depoimento de cliente · React (tela dividida) · Clone |
+| Imagem + texto/voz | Frase de identificação · Conteúdo na legenda · Voiceover |
+| Recorrência e visual | Série com episódios · Gancho visual forte / Dia X · Multitarefa |
+
+Formatos com mais de uma fonte são montados antes da edição com `scripts/compose.py`
+(`split` para React, `clone` para Clone, `assemble` para clipes + narração). Detalhes em
+[references/formatos.md](references/formatos.md).
 
 ## Perfil da marca
 

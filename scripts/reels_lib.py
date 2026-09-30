@@ -90,6 +90,16 @@ def T(txt, size, fill=WHITE, weight=None, stroke=0, sf=BLACK, shadow=True, famil
     _tc[k] = im
     return im
 
+def glyph_mid(txt, size, weight=None, family="sans", stroke=0):
+    """Vertical centre of the text's ink relative to its BASELINE (negative = above). A T() sprite is centred on
+    its ink box, so words with descenders ("que", "g") or no ascenders sit at different heights if pasted by
+    centre. Paste at  baseline + glyph_mid(...)  to put every word on one baseline."""
+    bb = font(size, weight, family).getbbox(txt, anchor="ls", stroke_width=stroke); return (bb[1] + bb[3]) / 2
+
+def baseline_for(cy, size, weight=None, family="sans"):
+    """Baseline that puts a line of capitals visually centred on cy."""
+    return cy - font(size, weight, family).getbbox("H", anchor="ls")[1] / 2
+
 def text_w(txt, size, weight=None, family="sans"):
     """Visible width of a text (without sprite padding) — use it to size cards/pills."""
     bb = font(size, weight, family).getbbox(txt); return bb[2] - bb[0]
@@ -411,12 +421,16 @@ class Reel:
             else:
                 sp = T(tk["d"], cs["size"], WHITE, cs["w"], cs["stroke"], family=cs["fam"])
                 vw = text_w(tk["d"], cs["size"], cs["w"], cs["fam"])
-            items.append((tk, sp, vw + 2 * cs["stroke"]))
+            key = tk["key"]
+            mid = glyph_mid(tk["d"], cs["ksize"] if key else cs["size"], cs["kw"] if key else cs["w"],
+                            cs["kfam"] if key else cs["fam"], cs["stroke"])
+            items.append((tk, sp, vw + 2 * cs["stroke"], mid))
         gap = int(cs["size"] * .4)                     # visible word gap from the font size, not sprite padding
-        tot = sum(v for _, _, v in items) + gap * (len(items) - 1)
+        base = baseline_for(self.cap_y, cs["size"], cs["w"], cs["fam"])   # one baseline for the whole line
+        tot = sum(it[2] for it in items) + gap * (len(items) - 1)
         k = min(1.0, (W - 2 * SAFE_SIDE) / tot)
         x = W / 2 - tot * k / 2
-        for tk, sp, vw in items:
+        for tk, sp, vw, mid in items:
             st = g["s"] if self.cap_anim == "group" else tk["s"] - .04
             if t >= st:
                 p = (t - st) / (.18 if self.cap_anim == "group" else .16)
@@ -428,7 +442,7 @@ class Reel:
                     if tk["s"] <= t < tk["e"] + .05: sc *= 1.08
                 else:                                  # minimal: soft rise + fade, no bounce
                     sc = k; dy = 14 * (1 - eo(p))
-                paste(ov, sp, x + vw * k / 2, self.cap_y + dy, sc, clamp(p * 2.5))
+                paste(ov, sp, x + vw * k / 2, base + mid * k + dy, sc, clamp(p * 2.5))
             x += (vw + gap) * k
 
     # ------------------------------------------------------------ camera

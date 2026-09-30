@@ -10,6 +10,7 @@ vídeo (`~/reels/<nome>/`), salvo indicação.
 vídeo bruto (.MOV/.MP4)
   │
   ├─ A. Perfil da marca ─ brand.py · briefing · Instagram (leitura) → perfil.md · video.md · marca.json
+  ├─ B. Formato ──────── 3 recomendados ou lista completa (12)     → template + compose.py se preciso
   ├─ 1. Análise ──────── transcribe.py · energy.py · faces.py  →  mapa + perguntas
   ├─ 1b. Plano ───────── objetivo · mensagem · estrutura · sequência  →  decisoes.json
   ├─ 2. Corte ────────── plan_cut.py · cut.py · transcribe.py  →  base_1440.mp4 + cuts.json
@@ -46,6 +47,19 @@ Como o perfil entra na edição:
 | correções da pessoa | gravadas de volta no `marca.json` / `video.md` |
 
 Ao entregar, `brand.py log` registra o vídeo em `videos.md`.
+
+## B. Formato do vídeo (escolhido pelo usuário)
+
+Logo depois do perfil da marca, o Claude olha o material gravado e recomenda **3 dos 12 formatos**
+(`references/formatos.md`), com o motivo de cada um; a pessoa escolhe ou pede a lista completa. O formato define
+estrutura, montagem, duração, ritmo, posição da legenda, política de zoom, orçamento de SFX e os motions
+(`scripts/formats.py`). Se o material não serve (ex.: Clone sem câmera fixa), a skill entrega o guia de gravação.
+
+Formatos com várias fontes são montados primeiro com `scripts/compose.py` e o resultado entra no fluxo normal:
+- `split` — React: referência em cima (áudio −14 dB), reação embaixo centrada no rosto; legenda na emenda.
+- `clone` — dois takes com câmera fixa unidos por uma emenda suave; avisa se a câmera mexeu.
+- `assemble` — clipes em sequência (9:16), com ou sem narração separada (voiceover, frase, conteúdo na legenda, Dia X).
+Todos limpam a marcação de rotação dos vídeos de celular (senão o player gira a imagem de novo).
 
 ## 0. Preparação (uma vez por computador)
 
