@@ -23,6 +23,12 @@
   motions, guia de gravação), `assets/formatos.json` (padrões), `scripts/formats.py` (motions: dica numerada,
   progresso, capítulo, citação, nome, antes/depois, react, clone, frase grande, leia a legenda, série, próximo
   episódio, Dia X, CTAs) e `scripts/compose.py` (split / clone / assemble).
+- **Banco do usuário** (`~/reels-banco`, fora do Git): referências por formato, fontes, motions e efeitos sonoros.
+  `scripts/banco.py` (init / status / check / list); `references/banco.md`.
+  - fontes do banco viram famílias de texto automaticamente;
+  - motions sobrepostos com transparência (`overlays=[...]`): `.mov` ProRes 4444/Animation, `.webm` VP9 com alfa,
+    `.gif`, sequência PNG; o `check` recusa arquivos sem transparência e avisa motion sobre o rosto;
+  - SFX por categoria (`sfx/<categoria>/`), alternando entre os arquivos da categoria.
 - Legendas e textos alinhados pela linha de base da fonte (`glyph_mid`/`baseline_for`): palavras com letras que
   descem ("que", "g") não sobem mais em relação às outras.
 - Marca: `formatos_preferidos` e `series` no `marca.json`; registro: campo `formato` no `decisoes.json`.

@@ -60,14 +60,19 @@ _fc, _tc, _rc, _ic = {}, {}, {}, {}
 #   hand  Caveat (Regular, Bold)            — handwritten accent with glow ("dar mal")
 FONTS = {"sans": "Montserrat.ttf", "serif": "SerifItalic.ttf", "cond": "BebasNeue-Regular.ttf", "hand": "Caveat.ttf"}
 DEFAULT_W = {"sans": "Black", "serif": "Bold Italic", "cond": None, "hand": "Bold"}
+try:                                    # user asset bank (~/reels-banco/fontes): every font becomes a family name
+    from banco import register_fonts as _reg_fonts; _reg_fonts(FONTS, DEFAULT_W)
+except Exception as _e:                 # the bank is optional
+    pass
 def font(size, weight=None, family="sans"):
-    weight = weight or DEFAULT_W[family]
+    if family not in FONTS: raise KeyError(f"fonte '{family}' não existe (embutidas + ~/reels-banco/fontes): {sorted(FONTS)}")
+    weight = weight or DEFAULT_W.get(family)
     if family == "serif" and weight and "Italic" not in weight: weight = "Bold Italic"
     if family == "hand" and weight not in ("Regular", "Bold"): weight = "Bold"
     k = (size, weight, family)
     if k not in _fc:
-        f = ImageFont.truetype(str(ASSETS / FONTS[family]), size)
-        if DEFAULT_W[family]: f.set_variation_by_name(weight)
+        fp = Path(FONTS[family]); f = ImageFont.truetype(str(fp if fp.is_absolute() else ASSETS / fp), size)
+        if DEFAULT_W.get(family): f.set_variation_by_name(weight)
         _fc[k] = f
     return _fc[k]
 
@@ -267,6 +272,43 @@ class _Clip:
         self.nt = lt + 1 / FPS
         return self.last
 
+class _Overlay:
+    """Sequential RGBA reader for an animated overlay from the bank: alpha video (.mov ProRes 4444 / qtrle / png,
+    .webm VP9 - decoded with libvpx-vp9 so the alpha survives), .gif, or a folder of PNG frames.
+    Scaled to width w (height keeps the aspect). frame(lt) returns an RGBA PIL image (or None after the end)."""
+    def __init__(self, src, kind, w, loop=False, speed=1.0):
+        self.src, self.kind, self.loop, self.speed = src, kind, loop, speed
+        if kind == "png_seq":
+            self.files = sorted(Path(src).glob("*.png")); im = Image.open(self.files[0]); sw, sh = im.size
+        else:
+            sw, sh = _probe_size(src)
+        self.w = int(w); self.h = int(round(self.w * sh / sw / 2) * 2)
+        self.dur = len(self.files) / FPS if kind == "png_seq" else _probe_dur(src)
+        self.p = None; self.nt = None; self.last = None
+    def _open(self, lt):
+        if self.p: self.p.kill()
+        pre = ["-c:v", "libvpx-vp9"] if self.src.lower().endswith(".webm") else []
+        lp = ["-stream_loop", "-1"] if self.loop else []
+        self.p = subprocess.Popen([FFM, "-loglevel", "error", *lp, *pre, "-ss", f"{lt * self.speed:.3f}", "-i", self.src,
+                                   "-vf", f"setpts=PTS/{self.speed},fps={FPS},scale={self.w}:{self.h}", "-f", "rawvideo",
+                                   "-pix_fmt", "rgba", "-"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        self.nt = lt
+    def frame(self, lt):
+        if not self.loop and lt * self.speed > self.dur: return None
+        if self.kind == "png_seq":
+            i = int(lt * self.speed * FPS); i = i % len(self.files) if self.loop else min(i, len(self.files) - 1)
+            return Image.open(self.files[i]).convert("RGBA").resize((self.w, self.h), Image.LANCZOS)
+        if self.p is None or self.nt is None or abs(lt - self.nt) > 1.5 / FPS: self._open(lt)
+        b = self.p.stdout.read(self.w * self.h * 4)
+        if len(b) == self.w * self.h * 4: self.last = Image.frombuffer("RGBA", (self.w, self.h), b, "raw", "RGBA", 0, 1)
+        self.nt = lt + 1 / FPS
+        return self.last
+
+def _probe_dur(src):
+    e = subprocess.run([FFM, "-hide_banner", "-i", src], capture_output=True, text=True, encoding="utf-8", errors="replace").stderr
+    d = re.search(r"Duration: (\d+):(\d+):([\d.]+)", e)
+    return int(d.group(1)) * 3600 + int(d.group(2)) * 60 + float(d.group(3)) if d else 1.0
+
 def _probe_size(src):
     probe = subprocess.run([FFM, "-hide_banner", "-i", src], capture_output=True, text=True).stderr
     m = re.search(r"Video:.*?(\d{2,5})x(\d{2,5})", probe); w, h = int(m.group(1)), int(m.group(2))
@@ -320,7 +362,7 @@ class Reel:
                  max_accel=.6, lock_spread=(.14, .09), z_max=1.25, scene_bump=0.0,
                  caption_style="hormozi", accent=YEL, look="none", flashes=(), sfx=(), sfx_dir=None,
                  jumpcuts="auto", cuts=(), jump_zoom=1.07, min_face=40, hide_captions=(), broll=(),
-                 caption_anim="group", correct=True):
+                 caption_anim="group", correct=True, overlays=()):
         # cuts: EVERY keep.json join in the cut timeline. jumpcuts="auto": the engine decides per cut whether a
         # zoom step is needed (visible jump on the same framing) or not (framing already changes, close-up,
         # B-roll, graphic entering, too soon) — see `python project.py cuts`. A list forces those cuts.
@@ -350,6 +392,24 @@ class Reel:
         # correct: technical colour correction per shot BEFORE the look (manual 11): exposure + white balance
         #   measured on the footage, limited strength so skin stays natural. `python project.py color` shows it.
         self.cap_anim, self.correct, self._corr = caption_anim, correct, None
+        # overlays: animated elements from the asset bank (~/reels-banco/motions) or any file:
+        #   dict(id="seta_curva" | src="path", t0=3.2, t1=None (= t0 + clip length), cx=540, cy=700 | prefer=700,
+        #        w=360, loop=False, speed=1.0, a=1.0). Same rules as motions: one function each, never over a face.
+        self.overlays = []
+        if overlays:
+            try:
+                from banco import motions as _bank_motions; bank = _bank_motions()
+            except Exception: bank = {}
+            for o in overlays:
+                o = dict(o)
+                if "id" in o and "src" not in o:
+                    if o["id"] not in bank: raise KeyError(f"motion '{o['id']}' não está no banco: {sorted(bank)}")
+                    o["src"], kind = bank[o["id"]]["path"], bank[o["id"]]["kind"]
+                else:
+                    kind = "png_seq" if Path(o["src"]).is_dir() else ("gif" if o["src"].lower().endswith(".gif") else "video")
+                o["clip"] = _Overlay(o["src"], kind, o.get("w", 360), o.get("loop", False), o.get("speed", 1.0))
+                o.setdefault("t1", o["t0"] + o["clip"].dur / o.get("speed", 1.0))
+                self.overlays.append(o)
         self.flashes, self.sfx = list(flashes), list(sfx)
         self.sfx_dir = Path(sfx_dir) if sfx_dir else Path.home() / "reels-sfx"
         self.src = src
@@ -758,9 +818,14 @@ class Reel:
             msgs.append(f"SFX: {len(on_cuts)} sons em cortes simples {['%.1f' % x for x in on_cuts]} - corte não precisa de som")
         return msgs
 
-    def _sfx_file(self, name):
+    def _sfx_file(self, name, t=0.0):
         p = Path(name)
         if p.suffix and p.exists(): return p
+        try:
+            from banco import sfx_file as _bank_sfx
+            hit = _bank_sfx(name, t)
+            if hit: return hit
+        except Exception: pass
         for ext in ("wav", "mp3", "ogg", "m4a"):
             hits = sorted(self.sfx_dir.glob(f"{name}*.{ext}"))
             if hits: return hits[0]
@@ -771,9 +836,9 @@ class Reel:
         Missing categories are reported, never invented — ask the user for licensed files."""
         items, miss = [], set()
         for t, name, gain in self.sfx:
-            f = self._sfx_file(name)
+            f = self._sfx_file(name, t)
             (items.append((t, f, gain)) if f else miss.add(name))
-        if miss: print("SFX missing in", self.sfx_dir, "->", sorted(miss))
+        if miss: print("SFX missing in ~/reels-banco/sfx/<categoria>/ and", self.sfx_dir, "->", sorted(miss))
         if not items: return None
         cmd = [FFM, "-loglevel", "error", "-y", "-f", "lavfi", "-t", f"{self.dur:.3f}", "-i", "anullsrc=r=48000:cl=stereo"]
         fl = []
@@ -812,10 +877,20 @@ class Reel:
             paste(ov, RR(cw + 8, ch + 8, 44, (255, 255, 255, 60)), W / 2, cy, s, a)
             paste(ov, im, W / 2, cy, s, a)
 
+    def _overlays(self, ov, t):
+        for o in self.overlays:
+            if not (o["t0"] <= t < o["t1"]): continue
+            im = o["clip"].frame(t - o["t0"])
+            if im is None: continue
+            cy = o["cy"] if "cy" in o else slot(o["t0"], o["t1"], o["clip"].h, prefer=o.get("prefer", 700))
+            a = o.get("a", 1.0) * min(1, (t - o["t0"]) / .08, (o["t1"] - t) / .08)   # 2-3 frame soft edges
+            paste(ov, im, o.get("cx", W / 2), cy, 1.0, a)
+
     def compose(self, frame, t, debug=False):
         img = self.bg_fx(self._broll_full(grade(self.color_correct(self.camera(frame, t), t), self.look), t), t)
         ov = Image.new("RGBA", (W, H))
         self._broll_cards(ov, t)
+        self._overlays(ov, t)
         for m in self.motions: m(ov, t)
         self.draw_captions(ov, t)
         if debug: self._debug(ov, t)
@@ -834,7 +909,7 @@ class Reel:
     def check_collisions(self, t):
         """Warn when a motion graphic covers >10% of the tracked face or leaves the safe area."""
         fb = self.face_box(t); msgs = []
-        for name, m in [(m.__name__, m) for m in self.motions] + [("broll_card", self._broll_cards)]:
+        for name, m in [(m.__name__, m) for m in self.motions] + [("broll_card", self._broll_cards), ("overlay", self._overlays)]:
             lay = Image.new("RGBA", (W, H)); m(lay, t); bb = lay.getchannel("A").point(lambda v: 255 if v > 40 else 0).getbbox()
             if not bb: continue
             if bb[1] < SAFE_TOP - 10 or bb[3] > SAFE_BOTTOM + 10 or bb[0] < SAFE_SIDE - 30 or bb[2] > W - SAFE_SIDE + 30:

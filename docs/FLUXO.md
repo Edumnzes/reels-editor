@@ -11,6 +11,7 @@ vídeo bruto (.MOV/.MP4)
   │
   ├─ A. Perfil da marca ─ brand.py · briefing · Instagram (leitura) → perfil.md · video.md · marca.json
   ├─ B. Formato ──────── 3 recomendados ou lista completa (12)     → template + compose.py se preciso
+  ├─ C. Banco ────────── referências do formato · fontes · motions · sons (~/reels-banco)
   ├─ 1. Análise ──────── transcribe.py · energy.py · faces.py  →  mapa + perguntas
   ├─ 1b. Plano ───────── objetivo · mensagem · estrutura · sequência  →  decisoes.json
   ├─ 2. Corte ────────── plan_cut.py · cut.py · transcribe.py  →  base_1440.mp4 + cuts.json
@@ -60,6 +61,13 @@ Formatos com várias fontes são montados primeiro com `scripts/compose.py` e o 
 - `clone` — dois takes com câmera fixa unidos por uma emenda suave; avisa se a câmera mexeu.
 - `assemble` — clipes em sequência (9:16), com ou sem narração separada (voiceover, frase, conteúdo na legenda, Dia X).
 Todos limpam a marcação de rotação dos vídeos de celular (senão o player gira a imagem de novo).
+
+## C. Banco do usuário (`~/reels-banco`)
+
+Logo após a escolha do formato, a skill lê `referencias/<formato>/referencias.md`, abre até 3 links (só leitura)
+e extrai o padrão — gancho, ritmo, texto na tela, motions, sons, duração, CTA — que passa a guiar o plano e a
+edição. Fontes do banco viram famílias de texto; motions com transparência são sobrepostos (`overlays`); sons
+saem de `sfx/<categoria>/`. `banco.py check` valida tudo (inclusive recusa motion sem transparência).
 
 ## 0. Preparação (uma vez por computador)
 

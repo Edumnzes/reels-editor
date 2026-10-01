@@ -130,11 +130,13 @@ reels-editor/
 │   ├── export_ig.py          # Reel, capa, prévia da grade e Stories
 │   ├── formats.py            # padrões e motions de cada formato
 │   ├── compose.py            # split (react), clone e assemble (clipes + narração)
+│   ├── banco.py              # banco do usuário: init / status / check / list
 │   ├── reels_lib.py          # motor: câmera, legendas, cor, B-roll, SFX, QA, render
 │   └── fx.py                 # animações de texto e fundos (inspiradas no React Bits)
 ├── references/
 │   ├── manual-edicao.md      # critérios do manual de edição (prevalece sobre os demais)
 │   ├── formatos.md           # os 12 formatos: estrutura, edição, motions e guia de gravação
+│   ├── banco.md              # como a skill usa referências, fontes, motions e sons do banco
 │   ├── onboarding.md         # briefing + análise do Instagram (1ª vez por marca)
 │   ├── style-guide.md        # números e regras: ritmo, zoom, proporção, legendas
 │   ├── visual-references.md  # direções visuais, cor, SFX, bancos de assets
@@ -210,17 +212,42 @@ python ~/.claude/skills/reels-editor/scripts/brand.py list
 
 Mostra as marcas que já têm perfil. Para ver ou apagar, é só abrir a pasta — são arquivos de texto.
 
+## Banco (referências, fontes, motions, efeitos)
+
+Seu acervo fica em `~/reels-banco` — fora do Git, porque fontes, motions e sons licenciados não podem ser
+redistribuídos. Criar e conferir:
+
+```bash
+python ~/.claude/skills/reels-editor/scripts/banco.py init
+```
+
+```bash
+python ~/.claude/skills/reels-editor/scripts/banco.py check
+```
+
+| Pasta | O que colocar | Uso |
+|---|---|---|
+| `referencias/<formato>/referencias.md` | links + o que copiar de cada referência | a skill segue o padrão do formato escolhido |
+| `fontes/` | `.ttf`/`.otf` + licença | cada arquivo vira uma família; a marca escolhe no `marca.json` |
+| `motions/<categoria>/` | `.mov` ProRes 4444 / `.webm` com transparência, `.gif`, pasta de PNGs | sobrepostos no vídeo |
+| `sfx/<categoria>/` | `.wav`/`.mp3` (pop, whoosh, click, ding, riser, impact, flash, tick, error) | sons dos eventos-chave |
+
+`.mogrt`/`.aep` e Lottie precisam ser exportados antes (ProRes 4444 com alfa / WebM com transparência).
+Detalhes em [references/banco.md](references/banco.md).
+
 ## Efeitos sonoros
 
 Seguindo o manual, os sons são **seletivos**: só nos eventos-chave (gancho, card principal, prova, CTA),
 no máximo ~2 a cada 10 s e nunca em corte simples. A skill **não baixa sons sozinha**. Salve arquivos licenciados em:
 
 ```
-~/reels-sfx/pop_01.wav
-~/reels-sfx/whoosh_01.wav
-~/reels-sfx/click_01.wav
-~/reels-sfx/ding_01.wav
+~/reels-banco/sfx/pop/pop_01.wav
+~/reels-banco/sfx/whoosh/whoosh_01.wav
+~/reels-banco/sfx/click/click_01.wav
+~/reels-banco/sfx/ding/ding_01.wav
 ```
+
+(A pasta antiga `~/reels-sfx/` continua funcionando.)
 
 O nome precisa começar pela categoria. Fontes gratuitas com uso comercial permitido: **Mixkit**
 e **Pixabay**. Se a pasta não existir, o vídeo sai sem SFX e o render avisa quais categorias faltam.

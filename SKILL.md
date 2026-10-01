@@ -68,6 +68,18 @@ read with `from formats import fmt`). The 12 formats: `fala_popups`, `dicas_rapi
    `cta_save`, `cta_follow`). Record it in `decisoes.json → formato` and add it to `formatos_preferidos` when the
    user likes the result. Series: keep name/episode/identity in `marca.json → series`.
 
+## C. User asset bank — references, fonts, motions, SFX (`references/banco.md`)
+
+`~/reels-banco` (outside git; `python scripts/banco.py status`). Use it whenever it has something for this video:
+- **References of the chosen format** (`referencias/<format>/referencias.md`): read them right after step B; open up to
+  3 links read-only to extract the pattern (hook, rhythm, on-screen text, motions, SFX, length, CTA), fill the file's
+  "Padrões" section so it isn't redone, and apply the pattern in 1b and step 5. Copy editing decisions, never content.
+- **Fonts**: every bank font is a family name for `T(..., family=...)`; the brand picks them in `marca.json → fontes`.
+- **Motions**: alpha video / gif / PNG sequence overlays via `Reel(..., overlays=[dict(id=..., t0=..., cx/cy|prefer, w)])`.
+  `banco.py check` rejects files without transparency.
+- **SFX**: `sfx=[(t, "pop", -12)]` resolves `~/reels-banco/sfx/pop/` (varies between files), then `~/reels-sfx/`.
+Tell the user in the delivery which bank items were used and their licence notes.
+
 ## 0. Environment (once per machine, ~2 min)
 
 ```
@@ -173,7 +185,7 @@ genre). Check `python project.py color` → color.jpg (antes / corrigido / + loo
 
 Sound effects are **selective** (manual §5): only on key events — hook entrance, the main card, a proof/result,
 the CTA — about 2 per 10 s at most, never on plain cuts, at −8…−14 dB. `project.py check` warns above that. The engine reads user-supplied files from `~/reels-sfx/<category>*.wav`.
-If that folder is missing or a category is absent, the render reports it; tell the user which categories to
+Files come from `~/reels-banco/sfx/<category>/` (then the legacy `~/reels-sfx/`). If a category is absent, the render reports it; tell the user which categories to
 download (Mixkit/Pixabay are free for commercial use; Motion Array/Envato/Artlist if they subscribe) and where
 to save them. Don't download assets yourself without the user's explicit OK.
 

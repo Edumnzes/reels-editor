@@ -58,6 +58,10 @@ O Software faz verificações, mas não garante exatidão. Revise antes de publi
 - **Efeitos sonoros, músicas, imagens e vídeos de apoio** não acompanham o Software. Use apenas
   arquivos cuja licença permita o seu uso (ex.: Mixkit, Pixabay, Motion Array, Envato, Artlist),
   respeitando as condições de cada banco. O Software não baixa assets sem sua autorização.
+- **Banco do usuário** (`~/reels-banco`: fontes, motions, sons, referências): é seu e fica só no seu
+  computador. Você é responsável pelas licenças de cada item; registre a origem/licença junto do arquivo.
+  Referências de outros perfis servem para estudar estrutura e decisões de edição — não copie conteúdo,
+  roteiro, marca ou assets de terceiros.
 - **Fontes e modelo de detecção** incluídos seguem as licenças em
   [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 - **Estilos de referência** citados na documentação (criadores e perfis públicos) servem apenas
