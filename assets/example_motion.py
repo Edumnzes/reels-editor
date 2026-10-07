@@ -4,6 +4,8 @@ Estilo: referências de motion limpo (fundo claro, 1 cor de marca, cards, tipogr
 sistema solar com fluxo CC/CA e mudança de estado.
 """
 import sys, math
+from functools import lru_cache
+from PIL import Image, ImageDraw
 from pathlib import Path
 sys.path.insert(0, str(Path.home() / ".claude" / "skills" / "reels-editor" / "scripts"))
 from motion_lib import *  # noqa
@@ -37,84 +39,127 @@ DUR = CTA0 + 4.6
 A0, B0, C0, D0, E0, F0, G0, H0, I0, J0, K0 = (T0[k][0] for k in "ABCDEFGHIJK")
 INV_OFF, RSD_CUT = E0 + 1.1, J0 + 1.2                         # the two switch moments
 
-# ============================================================ LAYOUT (8-px grid, inside the safe area)
-PLX, PLY, PLW, PLH = 540, 519, 904, 378                       # panels card = the roof (full width, 88-px margins)
-PW, PH, PGAP = 152, 88, 20                                    # module size
-PCOLS = [88 + 32 + PW // 2 + i * (PW + PGAP) for i in range(5)]
-PROWS = [450, 600]
-INVX, INVY, INVW = 540, 854, 620
-CASAX, REDEX, LOADY, LOADW = 300, 780, 1076, 400
+# ============================================================ LAYOUT — a house in section (8-px grid, safe area)
+# roof with the 10 modules, inverter on the inside wall, appliances on an AC bus, grid pole outside on the right
+ROOF = [(210, 392), (750, 392), (850, 672), (110, 672)]       # trapezoid (front view of the roof face)
+WALL = (160, 680, 800, 1150)                                  # house body
+PW, PH, PGAP = 100, 64, 12
+PCOLS = [256 + i * (PW + PGAP) for i in range(5)]
+PROWS = [446, 566]
+INVX, INVY = 250, 900
+BUSY, APPY = 985, 1076
+APPS = ((340, "fridge"), (480, "tv"), (720, "lamp"))
+POLEX = 915
 TXTY = 1310
-P_DC = dense([(540, 708), (540, 780)], r=0)
-P_AC1 = dense([(540, 928), (540, 965), (CASAX, 965), (CASAX, 1002)])
-P_AC2 = dense([(540, 928), (540, 965), (REDEX, 965), (REDEX, 1002)])
-WIRES = Wires((80, 700, 1000, 1010))
-WHITE_ = (255, 255, 255, 255)
+P_DC = dense([(INVX, 672), (INVX, 854)], r=0)
+P_BUS = dense([(INVX, 946), (INVX, BUSY), (POLEX, BUSY), (POLEX, 1012)])
+P_DROPS = [dense([(x, BUSY), (x, 1030)], r=0) for x, _ in APPS]
+WIRES = Wires((200, 660, 970, 1040))
+WHITE_ = (255, 255, 255, 255); ROOFC = (54, 60, 74, 255)
+
+
+@lru_cache(maxsize=2)
+def house_sprite():
+    """Static house in section: roof face, walls, floor and ground line. Drawn once at 3x, placed at y=370."""
+    k = 3; oy = 370; im = Image.new("RGBA", (W * k, 820 * k)); d = ImageDraw.Draw(im)
+    P = lambda x, y: (x * k, (y - oy) * k)
+    d.line([P(70, 1154), P(1010, 1154)], fill=HAIR, width=6 * k)                                  # ground
+    d.rounded_rectangle((*P(WALL[0], WALL[1]), *P(WALL[2], WALL[3])), 10 * k, fill=(255, 255, 255, 255), outline=INK, width=8 * k)
+    d.polygon([P(*q) for q in ROOF], fill=ROOFC)
+    d.line([P(*q) for q in ROOF] + [P(*ROOF[0])], fill=INK, width=8 * k, joint="curve")
+    d.line([P(WALL[0] - 20, 1150), P(WALL[2] + 20, 1150)], fill=INK, width=10 * k)                # floor slab
+    return im.resize((W, 820), Image.LANCZOS)
+
+
+@lru_cache(maxsize=16)
+def g_app(kind, on=True, s=92):
+    """Appliance glyphs: fridge | tv | lamp. on = powered (accent light), off = grey."""
+    im = Image.new("RGBA", (s * 3, s * 3)); d = ImageDraw.Draw(im); k = 3
+    ink = INK if on else MUTE; lit = AC if on else (200, 204, 211, 255); w = 6 * k
+    if kind == "fridge":
+        d.rounded_rectangle((24 * k, 6 * k, 68 * k, 88 * k), 8 * k, fill=(255, 255, 255, 255), outline=ink, width=w)
+        d.line((24 * k, 36 * k, 68 * k, 36 * k), fill=ink, width=w)
+        d.line((34 * k, 18 * k, 34 * k, 28 * k), fill=ink, width=w); d.line((34 * k, 46 * k, 34 * k, 62 * k), fill=ink, width=w)
+        d.ellipse((54 * k, 14 * k, 62 * k, 22 * k), fill=lit)
+    elif kind == "tv":
+        d.rounded_rectangle((8 * k, 14 * k, 84 * k, 64 * k), 8 * k, fill=(lit[:3] + (70,)) if on else (232, 234, 238, 255), outline=ink, width=w)
+        d.line((46 * k, 64 * k, 46 * k, 78 * k), fill=ink, width=w); d.line((28 * k, 80 * k, 64 * k, 80 * k), fill=ink, width=w)
+    else:                                                                                         # pendant lamp
+        d.line((46 * k, 0, 46 * k, 26 * k), fill=ink, width=w)
+        d.pieslice((20 * k, 22 * k, 72 * k, 74 * k), 180, 360, fill=ink)
+        if on: d.ellipse((30 * k, 44 * k, 62 * k, 76 * k), fill=lit[:3] + (90,))
+        d.ellipse((38 * k, 46 * k, 54 * k, 62 * k), fill=lit)
+    return im.resize((s, s), Image.LANCZOS)
 
 
 def diagram(ov, t):
     inv_on = t < INV_OFF; hot = F0 <= t < RSD_CUT; cut = eo(prog(t, RSD_CUT, .5)); off = eo(prog(t, INV_OFF, .4))
-    # ---- wires (under the cards)
+    ph = prog(t, A0, .5)
+    if ph <= 0: return
+    paste(ov, house_sprite(), W / 2, 370 + 410 + 24 * (1 - eo(ph)), a=eo(ph))                     # the house rises in
+    ps = prog(t, A0 + .35, .5)
+    if ps > 0: paste(ov, g_sun(104), 112, 352, (.5 + .5 * eback(ps)) * (1 + .04 * math.sin(t * 2.2)), eo(ps))
+    # ---- wires inside the house
     WIRES.begin()
     pdc = eo(prog(t, B0, .7))
     if pdc > 0:
         col = lerp(lerp(DC, DANGER, eo(prog(t, F0, .4))), HAIR, cut)
         wdt = 11 + (4 * (0.5 + 0.5 * math.sin((t - F0) * 9)) if hot else 0)
         WIRES.line(P_DC, col, wdt, 0, pdc)
-        if pdc >= 1 and cut < 1: WIRES.dots(P_DC, t, col, n=1, speed=120, r=11, a=1 - cut)
-    pac = eo(prog(t, C0, .7))
+        if pdc >= 1 and cut < 1: WIRES.dots(P_DC, t, col, n=2, speed=120, r=11, a=1 - cut)
+    pac = eo(prog(t, C0, .9))
     if pac > 0:
         col = lerp(AC, HAIR, off)
-        for pth in (P_AC1, P_AC2):
-            WIRES.line(pth, col, 11, 0, pac)
-            if pac >= 1 and off < 1: WIRES.dots(pth, t, AC, n=2, speed=160, r=11, a=1 - off)
+        WIRES.line(P_BUS, col, 11, 0, pac)
+        for pth in P_DROPS: WIRES.line(pth, col, 11, 0, eo(prog(t, C0 + .35, .4)))
+        if pac >= 1 and off < 1: WIRES.dots(P_BUS, t, AC, n=4, speed=170, r=11, a=1 - off)
     WIRES.end(ov)
-    # ---- panels card (the roof): sun + label on the left of the header, rapid-shutdown switch on the right
-    if card(ov, PLX, PLY, PLW, PLH, t, A0):
-        ps = prog(t, A0 + .3, .5)
-        if ps > 0: paste(ov, g_sun(64), 148, 368, (.5 + .5 * eback(ps)) * (1 + .04 * math.sin(t * 2.2)), eo(ps))
-        label(ov, "PLACAS  ·  TELHADO" if t < J0 else "TELHADO", 190, 368, ts("xs"), ax=0, a=eo(prog(t, A0 + .2, .3)))
-        if t >= J0:
-            pj = eo(prog(t, J0, .35)); label(ov, "DESLIGAMENTO RÁPIDO", 836, 368, ts("xs"), INK, a=pj, ax=1)
-            if pj > 0: toggle(ov, 906, 368, cut, on=SAFE, w=92, h=48)
-        for r, y in enumerate(PROWS):
-            for c, x in enumerate(PCOLS):
-                i = r * 5 + c; p = prog(t, A0 + .15 + i * .04, .35)
-                if p <= 0: continue
-                paste(ov, g_panel(PW, PH, "hot" if hot else "on"), x, y, .6 + .4 * eback(p), eo(p))
-                if c < 4 and cut < 1 and p >= 1:                      # series link to the next module
-                    paste(ov, RR(PGAP, 8, 4, DANGER if hot else DC), x + (PW + PGAP) / 2, y, a=1 - cut)
-                pv = prog(t, G0 + .15 + i * .07, .3)                    # "40 V" on each module
-                if pv > 0: label(ov, "40 V", x, y, ts("xs"), WHITE_, a=eo(pv))
-                pr = prog(t, I0 + .2 + i * .07, .35)                    # RSD under each module
-                if pr > 0:
-                    cy = y + PH / 2 + 8 + 18
-                    paste(ov, RR(PW, 36, 10, lerp(GOLD, SAFE, cut)), x, cy, .5 + .5 * eback(pr), eo(pr))
-                    label(ov, "RSD", x, cy, ts("xs"), INK, a=eo(pr))
-    # ---- inverter card (glyph + state on the left, its switch on the right from the "bombeiro" sentence on)
-    if card(ov, INVX, INVY, INVW, 148, t, B0 - .25):
-        paste(ov, g_inverter(84, 96, inv_on), INVX - 236, INVY)
-        label(ov, "INVERSOR", INVX - 170, INVY - 22, ts("xs"), ax=0)
-        label(ov, "ligado" if inv_on else "desligado", INVX - 170, INVY + 22, ts("sm"), SAFE if inv_on else MUTE, "Bold", ax=0)
-        if t >= E0:
-            if eo(prog(t, E0, .35)) > 0: toggle(ov, INVX + 226, INVY, 1 - off, on=SAFE)
-    # ---- house + grid
-    for x, g, name in ((CASAX, g_house, "CASA"), (REDEX, g_tower, "REDE")):
-        if card(ov, x, LOADY, LOADW, 148, t, C0 - .25):
-            paste(ov, g(92), x - 128, LOADY); label(ov, name, x - 62, LOADY - 22, ts("xs"), ax=0)
-            label(ov, "sem energia" if off >= 1 else "recebendo", x - 62, LOADY + 22, ts("sm"), MUTE if off >= 1 else AC, "Bold", ax=0)
+    # ---- modules on the roof (+ series links, 40 V, RSD)
+    for r, y in enumerate(PROWS):
+        for c, x in enumerate(PCOLS):
+            i = r * 5 + c; p = prog(t, A0 + .3 + i * .04, .35)
+            if p <= 0: continue
+            paste(ov, g_panel(PW, PH, "hot" if hot else "on"), x, y, .6 + .4 * eback(p), eo(p))
+            if c < 4 and cut < 1 and p >= 1: paste(ov, RR(PGAP, 8, 4, DANGER if hot else DC), x + (PW + PGAP) / 2, y, a=1 - cut)
+            pv = prog(t, G0 + .15 + i * .07, .3)
+            if pv > 0: label(ov, "40 V", x, y, ts("xs"), WHITE_, a=eo(pv))
+            pr = prog(t, I0 + .2 + i * .07, .35)
+            if pr > 0:
+                cy = y + PH / 2 + 6 + 15
+                paste(ov, RR(PW, 30, 9, lerp(GOLD, SAFE, cut)), x, cy, .5 + .5 * eback(pr), eo(pr))
+                label(ov, "RSD", x, cy, 22, INK, a=eo(pr))
+    # ---- inverter on the wall, with its switch (and the rapid-shutdown switch later)
+    pi = prog(t, B0 - .25, .4)
+    if pi > 0:
+        paste(ov, g_inverter(84, 96, inv_on), INVX, INVY, .6 + .4 * eback(pi), eo(pi))
+        label(ov, "INVERSOR", INVX + 62, INVY - 22, ts("xs"), ax=0, a=eo(pi))
+        label(ov, "ligado" if inv_on else "desligado", INVX + 62, INVY + 20, ts("sm"), SAFE if inv_on else MUTE, "Bold", ax=0, a=eo(pi))
+    pe = eo(prog(t, E0, .35))
+    if pe > 0:
+        label(ov, "CHAVE", 576, INVY - 46, ts("xs"), a=pe); toggle(ov, 576, INVY + 8, 1 - off, on=SAFE, w=104, h=54)
+    pj = eo(prog(t, J0, .35))
+    if pj > 0:
+        label(ov, "RSD", 712, INVY - 46, ts("xs"), INK, a=pj); toggle(ov, 712, INVY + 8, cut, on=SAFE, w=104, h=54)
+    # ---- appliances + grid pole
+    pa = prog(t, C0 - .2, .4)
+    if pa > 0:
+        for n, (x, kind) in enumerate(APPS):
+            pp = prog(t, C0 - .2 + n * .08, .4)
+            if pp > 0: paste(ov, g_app(kind, off < 1), x, APPY, .6 + .4 * eback(pp), eo(pp))
+        paste(ov, g_tower(112, INK if off < 1 else MUTE), POLEX, 1066, .6 + .4 * eback(pa), eo(pa))
+        label(ov, "REDE", POLEX, 1132, ts("xs"), a=eo(pa))
     pf = prog(t, D0 + .25, .4)
-    if pf > 0: paste(ov, g_flame(96), CASAX + 150, LOADY - 70, (.4 + .6 * eback(pf)) * (1 + .06 * math.sin(t * 13)), eo(pf))
-    # ---- state tags on the roof-to-inverter stretch
+    if pf > 0: paste(ov, g_flame(104), 600, 1092, (.4 + .6 * eback(pf)) * (1 + .06 * math.sin(t * 13)), eo(pf))
+    # ---- state tags in the stretch between the roof and the inverter
     if F0 + .3 <= t < RSD_CUT:
-        p = prog(t, F0 + .3, .35); pill(ov, 306, 744, "ENERGIZADO", ts("sm"), DANGER, WHITE_, "bolt", s=.6 + .4 * eback(p), a=eo(p))
+        p = prog(t, F0 + .3, .35); pill(ov, 520, 718, "ENERGIZADO", ts("sm"), DANGER, WHITE_, "bolt", s=.6 + .4 * eback(p), a=eo(p))
     if t >= RSD_CUT + .3:
-        p = prog(t, RSD_CUT + .3, .35); pill(ov, 330, 744, "SEGURO", ts("sm"), SAFE, WHITE_, "check", s=.6 + .4 * eback(p), a=eo(p))
-    if H0 + .2 <= t < RSD_CUT:                                          # the sum
+        p = prog(t, RSD_CUT + .3, .35); pill(ov, 520, 718, "SEGURO", ts("sm"), SAFE, WHITE_, "check", s=.6 + .4 * eback(p), a=eo(p))
+    if H0 + .2 <= t < RSD_CUT:
         p = prog(t, H0 + .2, .35); v = int(round(400 * eo(prog(t, H0 + .5, .9)) / 40) * 40)
-        pill(ov, 786, 744, f"10 × 40 V = {v} V", ts("sm"), INK, WHITE_, s=.6 + .4 * eback(p), a=eo(p))
+        pill(ov, 520, 786, f"10 × 40 V = {v} V", ts("sm"), INK, WHITE_, s=.6 + .4 * eback(p), a=eo(p))
     if t >= RSD_CUT + .45:
-        p = prog(t, RSD_CUT + .45, .35); pill(ov, 778, 744, "40 V por placa", ts("sm"), INK, WHITE_, s=.6 + .4 * eback(p), a=eo(p))
+        p = prog(t, RSD_CUT + .45, .35); pill(ov, 520, 786, "40 V por placa", ts("sm"), INK, WHITE_, s=.6 + .4 * eback(p), a=eo(p))
 
 
 CHAPTERS = (("COMO FUNCIONA", A0, T0["C"][1]), ("O PROBLEMA", D0, T0["F"][1]), ("A CONTA", G0, T0["H"][1]), ("A SOLUÇÃO", I0, T0["K"][1]))
