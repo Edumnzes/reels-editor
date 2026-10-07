@@ -129,6 +129,7 @@ reels-editor/
 │   ├── decisions.py          # registro de decisões + nota 0–5 (decisoes.json)
 │   ├── export_ig.py          # Reel, capa, prévia da grade e Stories
 │   ├── formats.py            # padrões e motions de cada formato
+│   ├── motion_lib.py         # motor de motion puro (sem vídeo): texto cinético, cards, fios, ícones
 │   ├── compose.py            # split (react), clone e assemble (clipes + narração)
 │   ├── banco.py              # banco do usuário: init / status / check / list
 │   ├── reels_lib.py          # motor: câmera, legendas, cor, B-roll, SFX, QA, render
@@ -143,6 +144,7 @@ reels-editor/
 │   └── reactbits.md          # catálogo de animações
 └── assets/
     ├── example_project.py    # projeto completo de exemplo (copiar e adaptar)
+    ├── example_motion.py     # exemplo de motion explicativo (RSD, sistema solar)
     ├── marca_template.json   # modelo do marca.json
     ├── decisoes_template.json # modelo do registro de decisões
     ├── formatos.json         # padrões de máquina de cada formato
@@ -181,6 +183,7 @@ se o material não serve ao formato escolhido, a skill avisa e explica como grav
 | Prova e reação | Depoimento de cliente · React (tela dividida) · Clone |
 | Imagem + texto/voz | Frase de identificação · Conteúdo na legenda · Voiceover |
 | Recorrência e visual | Série com episódios · Gancho visual forte / Dia X · Multitarefa |
+| Sem vídeo gravado | **Motion explicativo** — texto cinético + diagrama de sistema animado (`motion_lib.py`) |
 
 Formatos com mais de uma fonte são montados antes da edição com `scripts/compose.py`
 (`split` para React, `clone` para Clone, `assemble` para clipes + narração). Detalhes em

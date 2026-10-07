@@ -27,6 +27,8 @@ def duration(p):
 
 
 def story_splits(dur, cuts):
+    if not cuts:                                   # no cut points (pure motion): equal parts, never a 2-second tail
+        n = int(-(-dur // STORY_MAX)); return [dur * i / n for i in range(n + 1)]
     pts, t = [0.0], 0.0
     while dur - t > STORY_MAX:
         cand = [c for c in cuts if t + 20 < c <= t + STORY_MAX]

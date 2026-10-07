@@ -19,7 +19,7 @@ from pathlib import Path
 
 BANCO = Path(os.environ.get("REELS_BANCO", Path.home() / "reels-banco"))
 FORMATOS = ["fala_popups", "dicas_rapidas", "historia", "depoimento", "react", "clone", "frase_identificacao",
-            "conteudo_legenda", "voiceover", "serie", "gancho_visual", "multitarefa"]
+            "conteudo_legenda", "voiceover", "serie", "gancho_visual", "multitarefa", "motion_explicativo"]
 SFX_CATS = ["pop", "whoosh", "click", "ding", "riser", "impact", "flash", "tick", "error"]
 MOTION_CATS = ["setas", "sublinhados", "circulos", "stickers", "transicoes", "fundos", "icones"]
 FONT_EXT, AUDIO_EXT = (".ttf", ".otf"), (".wav", ".mp3", ".ogg", ".m4a")

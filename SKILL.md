@@ -53,7 +53,12 @@ Anything the user corrects during the edit ("não gosto dessa cor") is written b
 
 Every video is edited to one **format template** (`references/formatos.md`; defaults in `assets/formatos.json`,
 read with `from formats import fmt`). The 12 formats: `fala_popups`, `dicas_rapidas`, `historia`, `depoimento`,
-`react`, `clone`, `frase_identificacao`, `conteudo_legenda`, `voiceover`, `serie`, `gancho_visual`, `multitarefa`.
+`react`, `clone`, `frase_identificacao`, `conteudo_legenda`, `voiceover`, `serie`, `gancho_visual`, `multitarefa`,
+plus `motion_explicativo` — a pure motion-graphics explainer with NO footage (kinetic text + an animated system
+diagram), built with `scripts/motion_lib.py` from a script/explanation; see its section in `formatos.md` and
+`assets/example_motion.py`. For it, steps 1–3 and 5 are replaced by: extract the ideas of the source (rewrite, never
+reuse someone's audio/words) → script with one idea per sentence → storyboard of system states → project with
+`Motion(draw, dur)` → `preview` / `check` → `full` → `qa.py --silent`.
 1. Look at what was recorded (quick `faces.py --sheet` of the raw) + the brand's `video.md` and objective.
 2. Ask with `AskUserQuestion`: the **3 formats that best fit this footage and brand** (first = recommended, one
    line each on why) + a 4th option "Ver todos os formatos". If they pick it, show the grouped list

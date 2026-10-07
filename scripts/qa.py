@@ -9,6 +9,7 @@ One full decode of the file (proves it plays to the end) with ffmpeg filters:
   clipping (astats: samples at full scale)                     -> no audible distortion
   audio vs video length                                        -> sync / nothing truncated
   decode errors                                                -> corrupt file
+--silent: text-only motion video (silent track) - loudness checks are skipped.
 --project also runs `python project.py check` (graphics over faces, safe zones, SFX density).
 Writes qa.json and, if decisoes.json exists, fills its "qa_result". Exit code 1 when anything FAILs.
 """
@@ -27,6 +28,7 @@ def run(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("video"); ap.add_argument("--platform", default="reels", choices=SPECS)
     ap.add_argument("--project"); ap.add_argument("--decisions", default="decisoes.json")
+    ap.add_argument("--silent", action="store_true", help="video without voice/music (text-only motion): skip loudness")
     a = ap.parse_args(argv); spec = SPECS[a.platform]
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -63,7 +65,9 @@ def run(argv=None):
     add("fps", spec["fps"][0] <= fps <= spec["fps"][1], fps, "%s-%s" % spec["fps"])
     add("duração", spec["dur"][0] <= dur <= spec["dur"][1], f"{dur:.2f}s", "%s-%ss" % spec["dur"])
     add("áudio presente", has_audio, has_audio, True)
-    if has_audio:
+    if has_audio and a.silent:
+        add("trilha silenciosa (texto na tela; música no app)", lufs is None or lufs < -50, lufs, "sem voz", warn=True)
+    elif has_audio:
         add("volume integrado", lufs is not None and spec["lufs"][0] <= lufs <= spec["lufs"][1], lufs, "-14 LUFS ±1,5")
         add("pico real", peak is not None and peak <= spec["peak"], peak, f"≤ {spec['peak']} dBTP")
         add("distorção (clipping)", clip == 0, clip, 0, warn=True)

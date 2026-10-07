@@ -5,7 +5,7 @@ virais", @sala.criativa "Formatos virais de 2026", @allankevin.r "3 formatos cri
 "como gravo os formatos virais"). Padrões de máquina em `assets/formatos.json`; motions em `scripts/formats.py`;
 montagens com mais de uma fonte em `scripts/compose.py`. As regras do `manual-edicao.md` valem para todos.
 
-**Como escolher (passo B do SKILL.md):** depois do perfil da marca, recomende **3 formatos** para este vídeo
+São 13 formatos (12 + `motion_explicativo`). **Como escolher (passo B do SKILL.md):** depois do perfil da marca, recomende **3 formatos** para este vídeo
 (pelo material gravado + objetivo + o que funciona na marca em `video.md`) e deixe ver a lista toda.
 Se o material não serve ao formato escolhido (ex.: Clone sem câmera fixa), diga e entregue o guia de gravação.
 "O melhor formato é o que deu certo na rotina e na comunicação da marca" — valide um, repita e adapte.
@@ -24,6 +24,7 @@ Se o material não serve ao formato escolhido (ex.: Clone sem câmera fixa), dig
 | `serie` | Série com episódios | visual | episódio em qualquer formato | corte normal + identidade da série |
 | `gancho_visual` | Gancho visual forte / Dia X | visual | muitos clipes curtos | `compose.py assemble` |
 | `multitarefa` | Multitarefa | visual | 1 vídeo falando enquanto faz algo | corte normal |
+| `motion_explicativo` | Motion explicativo | imagem | um roteiro/explicação (sem vídeo) | `motion_lib.py` |
 
 ---
 
@@ -143,3 +144,27 @@ Se o material não serve ao formato escolhido (ex.: Clone sem câmera fixa), dig
 - **Motions:** pills pontuais, `cta_follow`.
 - **Gravar:** celular fixo (tripé) com a pessoa e a tarefa no quadro; lapela obrigatória (as mãos estão ocupadas
   e o barulho da tarefa atrapalha).
+
+## motion_explicativo — Motion explicativo (sem vídeo gravado)
+- **Quando:** explicar um conceito técnico ou um sistema (como funciona, o problema, a solução) sem ninguém na
+  câmera. A base pode ser um texto, um áudio ou um vídeo de referência — **extraia as ideias e reescreva**;
+  nunca reaproveite áudio, imagem ou frases de outra pessoa.
+- **Estrutura:** gancho em texto → título do conceito → o sistema montando ("como funciona") → o problema
+  (mudança de estado) → o número → a solução (novo estado) → afirmação/prova → CTA.
+- **Estilo (referências do banco):** fundo claro, **uma** cor de marca, tipografia cinética preta, cards
+  arredondados tipo aplicativo, pílulas, chave liga/desliga, frase-chave circulada. O diagrama do sistema usa nós
+  em cards ligados por fios com bolinhas (sentido da energia), cores fixas — CC azul, CA laranja, perigo vermelho,
+  seguro verde — e **mudança de estado** visível (fio cinza = sem energia, vermelho pulsando = energizado).
+- **Motor:** `scripts/motion_lib.py` (`Motion(draw, dur).cli()` → `preview`, `check`, `full`). Peças: `ktext`
+  (texto cinético), `ring`, `card`, `chip`, `label`, `toggle`, `Wires` (`line` com desenho progressivo, `dots`
+  fluindo), ícones `g_panel/g_inverter/g_house/g_tower/g_sun/g_flame/g_check`, `ambient` (fundo vivo).
+  Projeto de exemplo: `assets/example_motion.py` (RSD).
+- **Texto = narração:** sem voz, cada frase fica `read_time()` na tela (≈ 0,33 s por palavra + 1 s, mínimo
+  2,2 s). Frases ≤ 12 palavras, uma ideia por frase, 1–2 palavras coloridas. Texto narrativo `lg` (50 px);
+  rótulos do diagrama nunca abaixo de `xs` (26 px) — em tela de celular, menor que isso não se lê.
+- **Layout:** diagrama ocupando a largura útil (cards de 904 px), chip do capítulo no topo (≥ 270), texto
+  narrativo abaixo do diagrama e acima de 1440. `project.py check` confere a área segura.
+- **Áudio:** sai com trilha silenciosa; música no app do Instagram (ainda não configurada na skill) ou narração
+  depois (ressincronizar as janelas de cada frase). QA com `qa.py --silent`.
+- **Cuidados:** afirmações normativas, números e promessas ("é obrigatório", "o seguro não paga") são da marca —
+  registre a fonte em `decisoes.json` e avise o usuário para confirmar antes de publicar.

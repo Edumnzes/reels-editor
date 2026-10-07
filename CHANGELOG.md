@@ -23,6 +23,8 @@
   motions, guia de gravação), `assets/formatos.json` (padrões), `scripts/formats.py` (motions: dica numerada,
   progresso, capítulo, citação, nome, antes/depois, react, clone, frase grande, leia a legenda, série, próximo
   episódio, Dia X, CTAs) e `scripts/compose.py` (split / clone / assemble).
+- **13º formato: Motion explicativo** (sem vídeo gravado): `scripts/motion_lib.py` (texto cinético, cards, chave,
+  fios com energia fluindo, ícones de sistema solar, estados), `assets/example_motion.py`, `qa.py --silent`.
 - **Banco do usuário** (`~/reels-banco`, fora do Git): referências por formato, fontes, motions e efeitos sonoros.
   `scripts/banco.py` (init / status / check / list); `references/banco.md`.
   - fontes do banco viram famílias de texto automaticamente;
