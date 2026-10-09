@@ -1,6 +1,6 @@
 ---
 name: reels-editor
-description: Edit raw phone videos into dynamic Instagram Reels / TikTok / Shorts (9:16) — cut pauses, breaths, stumbles and repeated takes; add Hormozi-style word-by-word captions; face-tracked smooth zooms/punch-ins; explanatory motion graphics (hook, product cards, charts, counters, CTA); colour-grade looks; sound effects; and studio-clean voice via Adobe Podcast Enhance Speech. Starts with a one-time brand onboarding (short briefing + read-only analysis of the user's Instagram Reels and insights, saved on disk and reused), then the user picks one of 12 validated format templates (talking head + pop-ups, quick tips, story, testimonial, react split-screen, clone, identification phrase, content-in-caption, voiceover, series, strong visual hook / Day X, multitask). Knows reference styles (Hormozi, minimal/authority, flash cut, moody, cinematic text) and asset banks (Motion Array, Envato, Artlist, Mixkit, Pixabay). Use this whenever the user shares a .MOV/.MP4 and mentions reels, stories, shorts, TikTok, "legendas dinâmicas", "cortar pausas", "zoom", "motion", "editar vídeo para o Instagram", or wants another video "como aquele" — even if they only ask for one part (just captions, just the cut, just the audio).
+description: Edit raw phone videos into dynamic Instagram Reels / TikTok / Shorts (9:16) — cut pauses, breaths, stumbles and repeated takes; add Hormozi-style word-by-word captions; face-tracked smooth zooms/punch-ins; explanatory motion graphics (hook, product cards, charts, counters, CTA); colour-grade looks; sound effects; and studio-clean voice via Adobe Podcast Enhance Speech. Starts with a one-time brand onboarding (short briefing + read-only analysis of the user's Instagram Reels and insights, saved on disk and reused), then the user picks one of 13 format templates (talking head + pop-ups, quick tips, story, testimonial, react split-screen, clone, identification phrase, content-in-caption, voiceover, series, strong visual hook / Day X, multitask, and a pure motion-graphics explainer with no footage — kinetic text plus an animated system diagram built from a script or a reference explanation). Knows reference styles (Hormozi, minimal/authority, flash cut, moody, cinematic text) and asset banks (Motion Array, Envato, Artlist, Mixkit, Pixabay). Use this whenever the user shares a .MOV/.MP4 and mentions reels, stories, shorts, TikTok, "legendas dinâmicas", "cortar pausas", "zoom", "motion", "editar vídeo para o Instagram", or wants another video "como aquele" — even if they only ask for one part (just captions, just the cut, just the audio) — and also when they ask for a "vídeo em motion" / "motion explicativo" / animated explainer from a script, a text or a reference reel, with no footage of their own.
 ---
 
 # Reels editor
@@ -19,8 +19,9 @@ precedence over every other reference when they disagree. Then read `references/
 (timings, easing, spacing, safe zones) and the reasoning behind them — and
 `references/visual-references.md` to pick a direction (caption style, colour look, SFX, angles,
 asset banks) from the reference reels the user chose, and `references/reactbits.md` for the animation bank.
-`assets/example_project.py` is a complete worked project (52 s, two speakers + B-roll):
-copy it and adapt rather than writing a render from scratch.
+`assets/example_project.py` is a complete worked project in the v2 pattern (one speaker, format `fala_popups`,
+brand loaded with `load_brand`, format motions from `formats.py`, selective SFX): copy it and adapt rather than
+writing a render from scratch. `assets/example_motion.py` is the equivalent for a video with no footage.
 
 ## A. Brand profile — ALWAYS the first step
 
@@ -52,7 +53,7 @@ Anything the user corrects during the edit ("não gosto dessa cor") is written b
 ## B. Video format — chosen by the user, right after the brand profile
 
 Every video is edited to one **format template** (`references/formatos.md`; defaults in `assets/formatos.json`,
-read with `from formats import fmt`). The 12 formats: `fala_popups`, `dicas_rapidas`, `historia`, `depoimento`,
+read with `from formats import fmt`). The 13 formats: `fala_popups`, `dicas_rapidas`, `historia`, `depoimento`,
 `react`, `clone`, `frase_identificacao`, `conteudo_legenda`, `voiceover`, `serie`, `gancho_visual`, `multitarefa`,
 plus `motion_explicativo` — a pure motion-graphics explainer with NO footage (kinetic text + an animated system
 diagram), built with `scripts/motion_lib.py` from a script/explanation; see its section in `formatos.md` and
@@ -189,7 +190,7 @@ shots — `correct=True`), then applies the look. Default look `natural`; anothe
 genre). Check `python project.py color` → color.jpg (antes / corrigido / + look), look at skin, log in `color_strategy`.
 
 Sound effects are **selective** (manual §5): only on key events — hook entrance, the main card, a proof/result,
-the CTA — about 2 per 10 s at most, never on plain cuts, at −8…−14 dB. `project.py check` warns above that. The engine reads user-supplied files from `~/reels-sfx/<category>*.wav`.
+the CTA — about 2 per 10 s at most, never on plain cuts, at −8…−14 dB. `project.py check` warns above that.
 Files come from `~/reels-banco/sfx/<category>/` (then the legacy `~/reels-sfx/`). If a category is absent, the render reports it; tell the user which categories to
 download (Mixkit/Pixabay are free for commercial use; Motion Array/Envato/Artlist if they subscribe) and where
 to save them. Don't download assets yourself without the user's explicit OK.

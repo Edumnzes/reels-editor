@@ -29,7 +29,7 @@ com o Adobe Podcast Enhance Speech.
 
 | Etapa | Resultado |
 |---|---|
-| Formato (template) | Você escolhe 1 de 12 formatos validados (fala + pop-ups, dicas, história, depoimento, react, clone, frase, conteúdo na legenda, voiceover, série, gancho visual, multitarefa) |
+| Formato (template) | Você escolhe 1 de 13 formatos (fala + pop-ups, dicas, história, depoimento, react, clone, frase, conteúdo na legenda, voiceover, série, gancho visual, multitarefa e motion explicativo, sem vídeo gravado) |
 | Plano editorial | Objetivo, mensagem central, estrutura (problema→solução, antes→depois…) e sequência gancho→CTA antes de cortar |
 | Perfil da marca (1ª vez) | Briefing curto + análise dos Reels e Insights do Instagram; salvo no computador e reaproveitado |
 | Análise | Transcrição com tempo de cada palavra, mapa de pausas, detecção de rostos, resumo do vídeo |
@@ -136,7 +136,7 @@ reels-editor/
 │   └── fx.py                 # animações de texto e fundos (inspiradas no React Bits)
 ├── references/
 │   ├── manual-edicao.md      # critérios do manual de edição (prevalece sobre os demais)
-│   ├── formatos.md           # os 12 formatos: estrutura, edição, motions e guia de gravação
+│   ├── formatos.md           # os 13 formatos: estrutura, edição, motions e guia de gravação
 │   ├── banco.md              # como a skill usa referências, fontes, motions e sons do banco
 │   ├── onboarding.md         # briefing + análise do Instagram (1ª vez por marca)
 │   ├── style-guide.md        # números e regras: ritmo, zoom, proporção, legendas
@@ -173,7 +173,7 @@ no Windows, `~/reelsenv/bin/python` no macOS/Linux):
 
 ## Formatos
 
-Depois do perfil da marca, a skill recomenda **3 formatos** para o vídeo (e mostra os 12 se você quiser).
+Depois do perfil da marca, a skill recomenda **3 formatos** para o vídeo (e mostra os 13 se você quiser).
 Cada formato define estrutura, ritmo, duração, disposição na tela, motions e traz um **guia de gravação** —
 se o material não serve ao formato escolhido, a skill avisa e explica como gravar.
 

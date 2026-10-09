@@ -79,7 +79,7 @@ Which sound for which event:
 | Big reveal / title | `riser` → `impact` | −8 |
 | Positive result ("conta menor") | `ding` / `success` | −10 |
 | Error / problem | `error` / `buzz` | −12 |
-Keep a library in `~/reels-sfx/` named by category (`whoosh_01.wav`, `pop_soft.wav` …); the engine resolves
+Keep a library in `~/reels-banco/sfx/<category>/` (`whoosh/whoosh_01.wav`, `pop/pop_soft.wav` …; the old `~/reels-sfx/` still works); the engine resolves
 `sfx=[(t, "whoosh", -8)]` to the first match. Never download SFX without the user's OK — tell them what
 to grab (below) and where to put it.
 
@@ -114,7 +114,7 @@ Motion Array/Artlist, the user can export .cube — not wired into the engine ye
 | Freesound (free) | huge SFX archive | free | per-file CC0 / CC-BY / CC-BY-NC — filter to CC0 or credit; avoid NC for business |
 | Google Fonts (free) | OFL fonts (the bundled ones come from here) | free | OFL: commercial OK |
 Suggested starter pack to ask the user for: Mixkit/Pixabay "whoosh", "pop", "click", "camera flash",
-"riser", "impact", "ding" → `~/reels-sfx/`. Duotone stock cutaways (raele style): Motion Array / Envato "3D object loop", "money rain", "clock".
+"riser", "impact", "ding" → `~/reels-banco/sfx/<category>/`. Duotone stock cutaways (raele style): Motion Array / Envato "3D object loop", "money rain", "clock".
 
 ## 8. Out of scope for the engine (workarounds)
 - Text behind the subject / 3D-tracked "immersive" text, subject-masked flash cut: need segmentation/tracking (CapCut "Remove background", Premiere Object Mask, After Effects 3D Camera Tracker). The engine's `flashes` is a full-frame approximation.

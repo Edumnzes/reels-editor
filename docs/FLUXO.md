@@ -51,7 +51,7 @@ Ao entregar, `brand.py log` registra o vídeo em `videos.md`.
 
 ## B. Formato do vídeo (escolhido pelo usuário)
 
-Logo depois do perfil da marca, o Claude olha o material gravado e recomenda **3 dos 12 formatos**
+Logo depois do perfil da marca, o Claude olha o material gravado e recomenda **3 dos 13 formatos**
 (`references/formatos.md`), com o motivo de cada um; a pessoa escolhe ou pede a lista completa. O formato define
 estrutura, montagem, duração, ritmo, posição da legenda, política de zoom, orçamento de SFX e os motions
 (`scripts/formats.py`). Se o material não serve (ex.: Clone sem câmera fixa), a skill entrega o guia de gravação.

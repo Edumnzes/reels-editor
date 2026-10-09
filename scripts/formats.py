@@ -95,7 +95,7 @@ def name_card(ov, t, t0, t1, name, role="", accent=YEL, prefer=1110):
     """Lower-third for the person speaking (testimonial / interview): accent bar + name + role."""
     a = life(t, t0, t1, .35, .25)
     if a <= 0: return
-    nw = max(text_w(name, ts("lg")), text_w(role, ts("sm"), "Bold") if role else 0) + 90
+    nw = max(text_w(name, ts("lg")), text_w(role, ts("sm"), "Bold") if role else 0) + 124   # 60 left (bar) + 64 right
     cy = slot(t0, t1, 150, prefer=prefer); x0 = (W - nw) / 2; dx = -40 * (1 - _enter(t, t0))
     paste(ov, RR(int(nw), 150 if role else 100, 28, NAVY), W / 2 + dx, cy, a=a)
     paste(ov, RR(10, 110 if role else 64, 5, accent), x0 + 34 + dx, cy, a=a)
