@@ -18,12 +18,12 @@ For every file:
   4. move the original to sfx/_entrada/_processados/ (nothing is deleted)
 --dry only prints the table. Claude cannot hear: tell the user to listen once to what was classified by audio only.
 """
-import argparse, json, re, shutil, subprocess, sys, wave
+import argparse, hashlib, json, re, shutil, subprocess, sys, wave
 from pathlib import Path
 import numpy as np, imageio_ffmpeg
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from banco import BANCO, AUDIO_EXT
+from banco import BANCO, AUDIO_EXT, sfx_use
 
 FF = imageio_ffmpeg.get_ffmpeg_exe(); SR = 48000
 HINTS = [  # order matters: first match wins
@@ -33,9 +33,9 @@ HINTS = [  # order matters: first match wins
     ("whoosh", r"whoosh|woosh|swoosh|swish|swipe|sweep|transition|wind|whip"),
     ("ding", r"ding|bell|chime|success|notification|correct|sino|sparkle|coin|level[\s_-]?up"),
     ("impact", r"impact|hit|boom|thud|slam|punch|bass[\s_-]?drop|cinematic[\s_-]?hit|stomp|kick"),
-    ("tick", r"tick|tock|clock|typing|keyboard|type|counter|teclado"),
+    ("tick", r"typing|tick|tock|clock|counter|digitando|digitacao"),            # continuous typing / ticking
     ("pop", r"pop|bubble|plop|blip|bloop|pluck|drop"),
-    ("click", r"click|tap|snap|switch|button|mouse|clique"),
+    ("click", r"click|tap|snap|switch|button|mouse|keyboard|teclado|clique"),
 ]
 
 
@@ -112,24 +112,34 @@ def main():
     files = sorted(p for p in inbox.iterdir() if p.is_file() and p.suffix.lower() in AUDIO_EXT)
     if not files: print(f"nada em {inbox} — baixe os sons e coloque os arquivos nessa pasta"); return
     idx_p = root / "sfx.json"; idx = json.loads(idx_p.read_text(encoding="utf-8")) if idx_p.exists() else []
-    out = []
+    out = []; seen = {e.get("md5") for e in idx if e.get("md5")}
     for p in files:
+        h = hashlib.md5(p.read_bytes()).hexdigest()
+        if h in seen:                                   # "(1).mp3" copies and repeated downloads
+            out.append((p.name, "duplicado", 0, "mesmo arquivo já está no banco", ""))
+            if not a.dry:
+                (inbox / "_processados" / "_duplicados").mkdir(parents=True, exist_ok=True)
+                shutil.move(str(p), str(inbox / "_processados" / "_duplicados" / p.name))
+            continue
+        seen.add(h)
         x, _ = trim(decode(p))
         if len(x) < SR * .01: out.append((p.name, "—", 0, "áudio vazio ou ilegível", "")); continue
         m = measure(x); cat, conf, why = classify(p.stem, m)
         dest_dir = root / (cat or "_revisar"); slug = re.sub(r"[^a-z0-9]+", "-", p.stem.lower()).strip("-")[:32]
         n = len(list(dest_dir.glob("*.wav"))) + 1 if dest_dir.exists() else 1
         dest = dest_dir / (f"{cat}_{n:02d}_{slug}.wav" if cat else f"{slug}.wav")
-        out.append((p.name, cat or "revisar", conf, why, f"{m['dur']:.2f}s"))
+        uso = sfx_use(cat, m["dur"]) if cat else ""
+        out.append((p.name, cat or "revisar", conf, why + (f" · {uso}" if uso and uso != "ideal" else ""), f"{m['dur']:.2f}s"))
         if a.dry: continue
         save_wav(x, dest)
         idx.append(dict(arquivo=str(dest.relative_to(root)).replace("\\", "/"), categoria=cat, origem=a.origem, licenca=a.licenca,
-                        duracao=m["dur"], confianca=conf, criterio=why, medidas=m, original=p.name))
+                        duracao=m["dur"], uso=uso, confianca=conf, criterio=why, medidas=m, original=p.name, md5=h))
         (inbox / "_processados").mkdir(exist_ok=True); shutil.move(str(p), str(inbox / "_processados" / p.name))
     if not a.dry: idx_p.write_text(json.dumps(idx, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"{'arquivo':38} {'categoria':9} {'conf.':5} {'dur.':6} critério")
     for name, cat, conf, why, dur in out: print(f"{name[:38]:38} {cat:9} {conf:<5} {dur:6} {why}")
-    ok = sum(1 for o in out if o[1] not in ("revisar", "—")); print(f"\n{ok} classificados · {len(out) - ok} para revisar" + (" · (simulação, nada foi movido)" if a.dry else ""))
+    ok = sum(1 for o in out if o[1] not in ("revisar", "—", "duplicado")); dup = sum(1 for o in out if o[1] == "duplicado")
+    print(f"\n{ok} classificados · {len(out) - ok - dup} para revisar · {dup} duplicados" + (" · (simulação, nada foi movido)" if a.dry else ""))
 
 
 if __name__ == "__main__":

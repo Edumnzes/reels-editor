@@ -60,6 +60,10 @@ python scripts/sfx_ingest.py --origem Pixabay            # classifica, limpa e o
   está o pico de energia, brilho e sua direção, quão tonal, parcela de graves). Nome e áudio de acordo →
   confiança 0,95; só o nome → 0,8; só o áudio → 0,6 (**peça ao usuário para ouvir esses uma vez — você não ouve**);
   nada se encaixa → `sfx/_revisar/`, nunca chutado numa categoria.
+- **Duplicados** (cópias `(1).mp3`, downloads repetidos) são reconhecidos pelo conteúdo e separados.
+- **Tamanho de uso:** cada som é marcado `ideal`, `longo` ou `curto` para a categoria. O motor prefere os ideais;
+  um som longo nunca toca inteiro (é cortado no tamanho útil da categoria, com fade) e um **riser termina no evento**
+  (`sfx=[(t, "riser", -12)]` toca os últimos segundos antes de `t`).
 - **Limpeza:** corta o silêncio das pontas, fade de 15 ms no fim, pico em −3 dBFS, WAV 48 kHz.
 - **Registro:** `sfx/sfx.json` guarda categoria, origem, licença, duração, confiança e o nome original.
   Os originais vão para `_entrada/_processados/`.

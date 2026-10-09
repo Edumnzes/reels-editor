@@ -842,10 +842,19 @@ class Reel:
         if not items: return None
         cmd = [FFM, "-loglevel", "error", "-y", "-f", "lavfi", "-t", f"{self.dur:.3f}", "-i", "anullsrc=r=48000:cl=stereo"]
         fl = []
+        try: from banco import SFX_CAP as caps
+        except Exception: caps = {}
+        names = [n for _, n, _ in self.sfx if self._sfx_file(n, _)]
         for i, (t, f, gain) in enumerate(items):
             cmd += ["-i", str(f)]
-            ms = max(0, int(t * 1000))
-            fl.append(f"[{i + 1}:a]aresample=48000,aformat=channel_layouts=stereo,volume={gain}dB,adelay={ms}|{ms}[s{i}]")
+            cat = names[i] if i < len(names) else ""; d = _probe_dur(str(f)); cap = caps.get(cat, 3.0); pre = ""
+            if cat == "riser":                         # a riser leads INTO the event: it ends at t (last `cap` seconds)
+                use = min(d, cap); pre = f"atrim=start={d - use:.3f},asetpts=PTS-STARTPTS,afade=t=in:d=0.15,"
+                ms = max(0, int((t - use) * 1000))
+            else:                                      # anything else starts at t and never runs past its useful length
+                if d > cap: pre = f"atrim=end={cap:.3f},afade=t=out:st={cap - .12:.3f}:d=0.12,"
+                ms = max(0, int(t * 1000))
+            fl.append(f"[{i + 1}:a]{pre}aresample=48000,aformat=channel_layouts=stereo,volume={gain}dB,adelay={ms}|{ms}[s{i}]")
         fl.append("[0:a]" + "".join(f"[s{i}]" for i in range(len(items))) + f"amix=inputs={len(items) + 1}:normalize=0:duration=first[a]")
         subprocess.run(cmd + ["-filter_complex", ";".join(fl), "-map", "[a]", path], check=True)
         print(f"wrote {path} ({len(items)} sfx)")

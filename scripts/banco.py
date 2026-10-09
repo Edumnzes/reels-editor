@@ -158,10 +158,32 @@ def sfx():
     return out
 
 
+# Useful length of each kind of sound in a reel (s). Files inside the range are preferred by the engine;
+# longer ones stay in the bank ("longo") and are only used when nothing ideal exists, cut to SFX_CAP.
+SFX_IDEAL = {"click": (0, .45), "pop": (0, .7), "ding": (.15, 1.7), "whoosh": (.25, 1.9), "impact": (.2, 3.0),
+             "flash": (0, .7), "tick": (0, 2.2), "riser": (1.0, 4.6), "error": (.1, 1.6)}
+SFX_CAP = {"click": .6, "pop": .9, "ding": 2.2, "whoosh": 2.4, "impact": 3.2, "flash": .9, "tick": 1.8, "riser": 4.5, "error": 1.8}
+
+
+def sfx_index():
+    """{absolute path: entry of sfx.json} written by sfx_ingest.py (duration, origin, licence...)."""
+    p = BANCO / "sfx" / "sfx.json"
+    if not p.exists(): return {}
+    return {str((BANCO / "sfx" / e["arquivo"]).resolve()): e for e in json.loads(p.read_text(encoding="utf-8")) if e.get("arquivo")}
+
+
+def sfx_use(cat, dur):
+    lo, hi = SFX_IDEAL.get(cat, (0, 3)); return "ideal" if lo <= dur <= hi else ("longo" if dur > hi else "curto")
+
+
 def sfx_file(name, t=0.0):
-    """A file for SFX category `name`; varies between the category's files (by time) so repeats don't sound identical."""
+    """A file for SFX category `name`: prefers files of ideal length, and varies between them (by time) so
+    repeats don't sound identical."""
     files = sfx().get(name, [])
-    return Path(files[int(t * 7) % len(files)]) if files else None
+    if not files: return None
+    idx = sfx_index(); ideal = [f for f in files if idx.get(str(Path(f).resolve()), {}).get("uso", "ideal") == "ideal"]
+    pool = ideal or files
+    return Path(pool[int(t * 7) % len(pool)])
 
 
 def referencias(fmt_id):
