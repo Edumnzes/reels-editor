@@ -208,6 +208,17 @@ def draw(ov, t):
     if p > 0: label(ov, "@ynvestsolar", W / 2, 1000, ts("sm"), MUTE, "SemiBold", a=eo(p))
 
 
+# SFX only on key events (manual 5): 9 sounds in 62 s. A riser leads into the rapid-shutdown switch.
+SFX = [(0.2, "whoosh", -12),                 # hook
+       (S2[0] + .1, "pop", -12),             # title RSD
+       (A0, "whoosh", -14),                  # the house rises in
+       (INV_OFF, "click", -10),              # inverter switch off
+       (RSD_CUT, "riser", -16),              # ...leads into
+       (RSD_CUT, "click", -10),              # the rapid-shutdown switch
+       (RSD_CUT + .3, "ding", -12),          # SEGURO
+       (L0, "whoosh", -12),                  # "é obrigatório"
+       (CTA0 + 1.1, "pop", -12)]             # CTA button
+
 if __name__ == "__main__":
     print(f"duração {DUR:.1f}s · inversor off {INV_OFF:.1f}s · RSD {RSD_CUT:.1f}s · saída {OUT:.1f}s") if len(sys.argv) > 1 and sys.argv[1] == "times" else None
-    Motion(draw, DUR, BG).cli() if not (len(sys.argv) > 1 and sys.argv[1] == "times") else print({k: tuple(round(x, 1) for x in v) for k, v in T0.items()})
+    Motion(draw, DUR, BG, sfx=SFX).cli() if not (len(sys.argv) > 1 and sys.argv[1] == "times") else print({k: tuple(round(x, 1) for x in v) for k, v in T0.items()})

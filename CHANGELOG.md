@@ -23,6 +23,8 @@
   motions, guia de gravação), `assets/formatos.json` (padrões), `scripts/formats.py` (motions: dica numerada,
   progresso, capítulo, citação, nome, antes/depois, react, clone, frase grande, leia a legenda, série, próximo
   episódio, Dia X, CTAs) e `scripts/compose.py` (split / clone / assemble).
+- Motion explicativo com efeitos sonoros: `Motion(draw, dur, sfx=[...])` usa o banco com as mesmas regras do motor de
+  edição; `qa.py --silent` aceita trilha só com efeitos.
 - `scripts/sfx_ingest.py`: efeitos sonoros baixados à mão (Pixabay etc.) são classificados pelo nome e pela análise
   do áudio, limpos (silêncio, volume) e organizados por categoria, com origem e licença em `sfx/sfx.json`. Reconhece duplicados, marca o tamanho de uso
   (ideal/longo/curto); o motor prefere os ideais, corta sons longos no tamanho útil e faz o riser terminar no evento.

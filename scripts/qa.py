@@ -66,7 +66,8 @@ def run(argv=None):
     add("duração", spec["dur"][0] <= dur <= spec["dur"][1], f"{dur:.2f}s", "%s-%ss" % spec["dur"])
     add("áudio presente", has_audio, has_audio, True)
     if has_audio and a.silent:
-        add("trilha silenciosa (texto na tela; música no app)", lufs is None or lufs < -50, lufs, "sem voz", warn=True)
+        add("trilha sem voz (silenciosa ou só efeitos; música no app)", True, lufs, "sem voz")
+        if peak is not None: add("pico real", peak <= spec["peak"], peak, f"≤ {spec['peak']} dBTP")
     elif has_audio:
         add("volume integrado", lufs is not None and spec["lufs"][0] <= lufs <= spec["lufs"][1], lufs, "-14 LUFS ±1,5")
         add("pico real", peak is not None and peak <= spec["peak"], peak, f"≤ {spec['peak']} dBTP")

@@ -164,7 +164,8 @@ Se o material não serve ao formato escolhido (ex.: Clone sem câmera fixa), dig
   rótulos do diagrama nunca abaixo de `xs` (26 px) — em tela de celular, menor que isso não se lê.
 - **Layout:** diagrama ocupando a largura útil (cards de 904 px), chip do capítulo no topo (≥ 270), texto
   narrativo abaixo do diagrama e acima de 1440. `project.py check` confere a área segura.
-- **Áudio:** sai com trilha silenciosa; música no app do Instagram (ainda não configurada na skill) ou narração
-  depois (ressincronizar as janelas de cada frase). QA com `qa.py --silent`.
+- **Áudio:** sem voz. Efeitos sonoros do banco nos eventos-chave (`Motion(draw, dur, sfx=[(t, "pop", -12), ...])`:
+  entradas de cena, chaves, o resultado, o CTA; ~2 a cada 10 s no máximo; um riser termina no evento). Música no app do
+  Instagram (ainda não configurada na skill) ou narração depois. QA com `qa.py --silent`.
 - **Cuidados:** afirmações normativas, números e promessas ("é obrigatório", "o seguro não paga") são da marca —
   registre a fonte em `decisoes.json` e avise o usuário para confirmar antes de publicar.

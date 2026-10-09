@@ -237,6 +237,33 @@ def ambient(ov, t, col=GOLD, a=.16):
     paste(ov, b, 930 + 50 * math.cos(t * .21), 260 + 40 * math.sin(t * .17), .8)
 
 
+# ---------------------------------------------------------------- sound effects (same rules as the Reel engine)
+def sfx_track(sfx, dur, path="sfx.wav"):
+    """sfx = [(t, "categoria" | file, gain_db)] from ~/reels-banco/sfx. Long sounds are cut to the category's useful
+    length, a riser ENDS at t. Returns the path, or None when nothing could be resolved (missing ones are printed)."""
+    try: from banco import sfx_file, SFX_CAP
+    except Exception: return None
+    from reels_lib import _probe_dur
+    items, miss = [], set()
+    for t, name, gain in sfx:
+        f = Path(name) if Path(name).suffix and Path(name).exists() else sfx_file(name, t)
+        (items.append((t, name, f, gain)) if f else miss.add(name))
+    if miss: print("SFX sem arquivo em ~/reels-banco/sfx ->", sorted(miss))
+    if not items: return None
+    cmd = [FFM, "-loglevel", "error", "-y", "-f", "lavfi", "-t", f"{dur:.3f}", "-i", "anullsrc=r=48000:cl=stereo"]; fl = []
+    for i, (t, cat, f, gain) in enumerate(items):
+        cmd += ["-i", str(f)]; d = _probe_dur(str(f)); cap = SFX_CAP.get(cat, 3.0); pre = ""
+        if cat == "riser":
+            use = min(d, cap); pre = f"atrim=start={d - use:.3f},asetpts=PTS-STARTPTS,afade=t=in:d=0.15,"; ms = max(0, int((t - use) * 1000))
+        else:
+            if d > cap: pre = f"atrim=end={cap:.3f},afade=t=out:st={cap - .12:.3f}:d=0.12,"
+            ms = max(0, int(t * 1000))
+        fl.append(f"[{i + 1}:a]{pre}aresample=48000,aformat=channel_layouts=stereo,volume={gain}dB,adelay={ms}|{ms}[s{i}]")
+    fl.append("[0:a]" + "".join(f"[s{i}]" for i in range(len(items))) + f"amix=inputs={len(items) + 1}:normalize=0:duration=first[a]")
+    subprocess.run(cmd + ["-filter_complex", ";".join(fl), "-map", "[a]", path], check=True)
+    print(f"wrote {path} ({len(items)} sfx)"); return path
+
+
 # ---------------------------------------------------------------- renderer
 class Motion:
     def __init__(self, draw, dur, bg=BG, sfx=(), amb=GOLD):
@@ -272,11 +299,15 @@ class Motion:
                 if bb and (bb[1] < SAFE_TOP - 6 or bb[3] > SAFE_BOTTOM + 6 or bb[0] < SAFE_SIDE - 30 or bb[2] > W - SAFE_SIDE + 30):
                     print(f"WARN {t:.2f}s fora da área segura {bb}"); n += 1
                 t += .5
+            if self.sfx and len(self.sfx) / max(self.dur, 1) * 10 > 2.0:
+                print(f"WARN SFX: {len(self.sfx)} em {self.dur:.0f}s - use só nos eventos-chave (máx ~2 a cada 10 s)"); n += 1
             print(f"{n} warnings")
         elif cmd == "full":
             out = args[0]; n = int(self.dur * FPS)
+            trk = sfx_track(self.sfx, self.dur) if self.sfx else None      # SFX from the bank, or a silent track
+            audio = ["-i", trk] if trk else ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"]
             enc = subprocess.Popen([FFM, "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
-                                    "-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo", "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "medium",
+                                    *audio, "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "medium",
                                     "-crf", "16", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k", "-shortest", "-movflags", "+faststart", out], stdin=subprocess.PIPE)
             for i in range(n):
                 enc.stdin.write(self.frame(i / FPS).tobytes())
