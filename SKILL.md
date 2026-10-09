@@ -84,6 +84,10 @@ reuse someone's audio/words) → script with one idea per sentence → storyboar
 - **Motions**: alpha video / gif / PNG sequence overlays via `Reel(..., overlays=[dict(id=..., t0=..., cx/cy|prefer, w)])`.
   `banco.py check` rejects files without transparency.
 - **SFX**: `sfx=[(t, "pop", -12)]` resolves `~/reels-banco/sfx/pop/` (varies between files), then `~/reels-sfx/`.
+  New downloads: the user drops files (any name) in `~/reels-banco/sfx/_entrada/` and you run
+  `python scripts/sfx_ingest.py --origem Pixabay` — it classifies by name + measured audio, trims silence, levels,
+  files each sound under its category and logs the licence. Pixabay has no audio API, so the search is the user's.
+  You cannot hear, so ask the user to listen once to the ones classified "só pelo áudio".
 Tell the user in the delivery which bank items were used and their licence notes.
 
 ## 0. Environment (once per machine, ~2 min)

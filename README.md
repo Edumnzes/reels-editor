@@ -132,6 +132,7 @@ reels-editor/
 │   ├── motion_lib.py         # motor de motion puro (sem vídeo): texto cinético, cards, fios, ícones
 │   ├── compose.py            # split (react), clone e assemble (clipes + narração)
 │   ├── banco.py              # banco do usuário: init / status / check / list
+│   ├── sfx_ingest.py         # classifica, limpa e organiza efeitos sonoros baixados
 │   ├── reels_lib.py          # motor: câmera, legendas, cor, B-roll, SFX, QA, render
 │   └── fx.py                 # animações de texto e fundos (inspiradas no React Bits)
 ├── references/
@@ -251,6 +252,16 @@ no máximo ~2 a cada 10 s e nunca em corte simples. A skill **não baixa sons so
 ```
 
 (A pasta antiga `~/reels-sfx/` continua funcionando.)
+
+**Jeito mais fácil:** baixe os sons no Pixabay (ou outro banco), solte os arquivos com qualquer nome em
+`~/reels-banco/sfx/_entrada/` e peça ao Claude para organizar — ou rode:
+
+```bash
+python ~/.claude/skills/reels-editor/scripts/sfx_ingest.py --origem Pixabay
+```
+
+Cada som é classificado pelo nome e pela análise do áudio, tem o silêncio cortado e o volume igualado, e vai
+para a pasta da categoria. O que não der para classificar fica em `sfx/_revisar/`.
 
 O nome precisa começar pela categoria. Fontes gratuitas com uso comercial permitido: **Mixkit**
 e **Pixabay**. Se a pasta não existir, o vídeo sai sem SFX e o render avisa quais categorias faltam.

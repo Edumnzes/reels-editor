@@ -23,6 +23,8 @@
   motions, guia de gravação), `assets/formatos.json` (padrões), `scripts/formats.py` (motions: dica numerada,
   progresso, capítulo, citação, nome, antes/depois, react, clone, frase grande, leia a legenda, série, próximo
   episódio, Dia X, CTAs) e `scripts/compose.py` (split / clone / assemble).
+- `scripts/sfx_ingest.py`: efeitos sonoros baixados à mão (Pixabay etc.) são classificados pelo nome e pela análise
+  do áudio, limpos (silêncio, volume) e organizados por categoria, com origem e licença em `sfx/sfx.json`.
 - `assets/example_project.py` reescrito no padrão da v2 (perfil da marca, formato, motions de formato, SFX seletivo),
   sem conteúdo de clientes. Descrição da skill atualizada para 13 formatos e para pedidos de "vídeo em motion".
 - **13º formato: Motion explicativo** (sem vídeo gravado): `scripts/motion_lib.py` (texto cinético, cards, chave,

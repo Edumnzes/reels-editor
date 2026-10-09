@@ -70,6 +70,15 @@ Guarde junto de cada item a origem e a licença (arquivo `licenca.txt` na pasta 
 """
 
 
+ENTRADA_TXT = """Coloque aqui os efeitos sonoros que você baixar (Pixabay, Mixkit, Motion Array...), com qualquer nome.
+Depois peça ao Claude para organizar os sons, ou rode:
+  python ~/.claude/skills/reels-editor/scripts/sfx_ingest.py --origem Pixabay
+Cada som é classificado (click, pop, whoosh, ding, riser, impact, flash, tick, error), tem o silêncio
+cortado, o volume igualado e vai para a pasta da categoria. Os originais ficam em _processados.
+O que não der para classificar vai para sfx/_revisar.
+"""
+
+
 def _write(p, text):
     if p.exists(): return False
     p.parent.mkdir(parents=True, exist_ok=True); p.write_text(text, encoding="utf-8"); return True
@@ -94,6 +103,7 @@ def init():
                                                             "ancora": [0.5, 0.5]}], ensure_ascii=False, indent=2))
     for c in SFX_CATS: (BANCO / "sfx" / c).mkdir(parents=True, exist_ok=True)
     (BANCO / "sfx" / "_entrada").mkdir(parents=True, exist_ok=True)      # drop downloads here, then run sfx_ingest.py
+    _write(BANCO / "sfx" / "_entrada" / "LEIA-ME.txt", ENTRADA_TXT)
     print("banco em", BANCO, "· criados:", ", ".join(made) or "nada (já existia)")
 
 

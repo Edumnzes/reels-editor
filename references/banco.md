@@ -49,6 +49,22 @@ Registre em `decisoes.json → motion_strategy` com a função.
 ding, riser, impact, flash, tick, error — `status` lista as vazias. Seletivo (manual §5): eventos-chave, ~2 a
 cada 10 s no máximo, nunca em corte simples.
 
+### Entrada de sons baixados (`sfx/_entrada/` + `sfx_ingest.py`)
+O Pixabay não tem API de áudio, então a busca é do usuário: ele baixa os sons (Pixabay, Mixkit, Motion Array…)
+e solta os arquivos, com qualquer nome, em `~/reels-banco/sfx/_entrada/`. Depois:
+```
+python scripts/sfx_ingest.py --dry                       # só mostra a tabela (categoria, confiança, critério)
+python scripts/sfx_ingest.py --origem Pixabay            # classifica, limpa e organiza
+```
+- **Classificação:** o nome do arquivo é a primeira evidência; o áudio é sempre medido (duração, ataque, onde
+  está o pico de energia, brilho e sua direção, quão tonal, parcela de graves). Nome e áudio de acordo →
+  confiança 0,95; só o nome → 0,8; só o áudio → 0,6 (**peça ao usuário para ouvir esses uma vez — você não ouve**);
+  nada se encaixa → `sfx/_revisar/`, nunca chutado numa categoria.
+- **Limpeza:** corta o silêncio das pontas, fade de 15 ms no fim, pico em −3 dBFS, WAV 48 kHz.
+- **Registro:** `sfx/sfx.json` guarda categoria, origem, licença, duração, confiança e o nome original.
+  Os originais vão para `_entrada/_processados/`.
+- Ao faltar uma categoria num vídeo, diga quais sons baixar (ex.: "2 whooshes curtos e 1 ding") e onde soltar.
+
 ## 5. Antes de entregar
 Se o vídeo usa itens do banco, confirme que `banco.py check` está sem erros para eles e cite na entrega quais
 fontes/motions/sons foram usados e a origem (licença), para o usuário saber o que está publicando.
