@@ -93,6 +93,7 @@ def init():
                                                             "uso": "apontar para um detalhe", "licenca": "Motion Array",
                                                             "ancora": [0.5, 0.5]}], ensure_ascii=False, indent=2))
     for c in SFX_CATS: (BANCO / "sfx" / c).mkdir(parents=True, exist_ok=True)
+    (BANCO / "sfx" / "_entrada").mkdir(parents=True, exist_ok=True)      # drop downloads here, then run sfx_ingest.py
     print("banco em", BANCO, "· criados:", ", ".join(made) or "nada (já existia)")
 
 
@@ -141,7 +142,7 @@ def sfx():
     d = BANCO / "sfx"; out = {}
     if not d.exists(): return out
     for p in sorted(d.rglob("*")):
-        if p.suffix.lower() not in AUDIO_EXT: continue
+        if p.suffix.lower() not in AUDIO_EXT or any(part.startswith("_") for part in p.relative_to(d).parts): continue   # _entrada, _revisar
         cat = p.parent.name if p.parent != d else re.split(r"[_\-\d]", p.stem.lower())[0]
         out.setdefault(cat, []).append(str(p))
     return out
